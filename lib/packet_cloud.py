@@ -1,0 +1,247 @@
+import os
+import sys
+import requests
+import json
+import globals
+import reports
+import time
+
+
+class PacketCloud:
+    """Interact with Packet Cloud"""
+    def __init__(self, token, project_id):
+        self.token = token
+        self.project_id = project_id
+
+
+    def run_batch(self, hostname, action):
+        post_payload = {
+            'batches': [
+                {
+                    'hostname': hostname,
+                    'facility': action['facility'],
+                    'plan': action['plan'],
+                    'operating_system': action['operating_system'],
+                    'userdata': action['userdata'],
+                    'customdata': action['customdata'],
+                    'quantity': 1,
+                    'ip_addresses': action['ip_addresses']
+                }
+            ]
+        }
+
+        # perform post operation
+        try:
+            api_endpoint = "projects/{}/devices/batch".format(self.project_id)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.post( "{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers, data=json.dumps(post_payload))
+            if rest_response.status_code != 201:
+                return(None, rest_response.text)
+        except Exception as ex:
+            sys.stdout.write("ERROR: failed to launch instance ({})\n".format(ex.message))
+            return(None, ex.message)
+
+        # parse rest response
+        try:
+            json_response = json.loads(rest_response.text)
+            return(json_response['batches'][0]['id'], None)
+        except:
+            sys.stdout.write("INFO: failed to launch instance (failed to retrieve the batch id)\n")
+            return(None, "failed to retrieve the batch id")
+
+
+    def launch_instance(self, action):
+        sys.stdout.write("ACTION = {}\n\n".format(action['operation']))
+
+        # valid action JSON
+        required_keys = ['num_instances','plan']
+        for key_name in required_keys:
+            if not key_name in action:
+                sys.stdout.write("ERROR: missing required key in action: {}".format(key_name))
+                return(None)
+
+        # prepare to launch instances
+        table_title = "------ Action Parameters ------"
+        table_columns = ["Plan","Data Center","Operating System","Hostname Base","# Instances"]
+        table_rows = [ 
+            [action['plan'], action['facility'], action['operating_system'], action['hostname_base'], action['num_instances']]
+        ]
+        reports.display_table(table_title, table_columns, table_rows)
+        
+        # launch instances
+        sys.stdout.write("\n[Launching Instances]\n")
+        LAUNCH_INTERVAL = 5
+        cnt = 1
+        while cnt <= action['num_instances']:
+            target_hostname = "{}{}".format(action['hostname_base'], str(cnt).zfill(2))
+            sys.stdout.write("--> launching {}\n".format(target_hostname))
+            batch_id, launch_message = self.run_batch(target_hostname, action)
+            if not batch_id:
+                sys.stdout.write("ERROR: failed to launch instance ({})\n".format(launch_message))
+                return(None)
+            time.sleep(LAUNCH_INTERVAL)
+            cnt += 1
+
+
+    def run_action(self, spec_file):
+        if not os.path.isfile(spec_file):
+            sys.stdout.write("ERROR: failed to open spec file: {}".format(spec_file))
+            return(None)
+
+        with open(spec_file) as json_file:
+            spec_actions = json.load(json_file)
+
+        required_keys = ['actions']
+        for key_name in required_keys:
+            if not key_name in spec_actions:
+                sys.stdout.write("ERROR: missing required key in spec file: {}".format(key_name))
+                return(None)
+
+        # loop over actions (run sequentially/synchronously)
+        for action in spec_actions['actions']:
+            if 'operation' not in action:
+                sys.stdout.write("ERROR: invalid json syntax, missing: operation\n")
+                continue
+
+            # invoke action-specific functions
+            if action['operation'] == "launch-instance":
+                self.launch_instance(action)
+
+    def get_plans(self):
+        try:
+            api_endpoint = "/projects/{}/plans".format(self.project_id)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.get("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers)
+            if rest_response.status_code == 200:
+                try:
+                    json_response = json.loads(rest_response.text)
+                    return(json_response)
+                except:
+                    return(None)
+        except:
+            return(None)
+
+        return(None)
+
+
+    def show_plans(self):
+        # query packet API
+        plans = self.get_plans()
+
+        # initialize table for report
+        from prettytable import PrettyTable
+        host_profile_table = PrettyTable()
+        host_profile_table.title = "Plans"
+        host_profile_table.field_names = ["Name","Class","Price","Memory","CPU","NIC","Storage"]
+        host_profile_table.align["Name"] = "l"
+        host_profile_table.align["Class"] = "l"
+        host_profile_table.align["Price"] = "l"
+        host_profile_table.align["Memory"] = "l"
+        host_profile_table.align["CPU"] = "l"
+        host_profile_table.align["NIC"] = "l"
+        host_profile_table.align["Storage"] = "l"
+
+        for plan in plans['plans']:
+            plan_memory = "-"
+            plan_nic = "-"
+            plan_disk = "-"
+            plan_cpu = "-"
+            for s in plan['specs']:
+                if s == 'memory':
+                    plan_memory = plan['specs'][s]['total']
+                if s == 'cpus':
+                    num_cpu = 0
+                    cpu_type = "-"
+                    for cpu in plan['specs'][s]:
+                        cpu_type = plan['specs'][s][num_cpu]['type']
+                        num_cpu += 1
+                    plan_cpu = "({}) {}".format(num_cpu, cpu_type)
+                if s == 'nics':
+                    num_nic = 0
+                    nic_type = "-"
+                    for nic in plan['specs'][s]:
+                        nic_type = plan['specs'][s][num_nic]['type']
+                        num_nic += 1
+                    plan_nic = "({}) {}".format(num_nic, nic_type)
+                if s == 'drives':
+                    num_disk = 0
+                    disk_type = "-"
+                    for disk in plan['specs'][s]:
+                        disk_type = plan['specs'][s][num_disk]['type']
+                        num_disk += 1
+                    plan_disk = "({}) {}".format(num_disk, disk_type)
+            plan_name = plan['name']
+            plan_class = plan['class']
+            plan_price = plan['pricing']['hour']
+            host_profile_table.add_row([plan_name,plan_class,plan_price,plan_memory,plan_cpu,plan_nic,plan_disk])
+
+        print(host_profile_table)
+
+    def get_oses(self):
+        try:
+            api_endpoint = "/operating-systems"
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.get("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers)
+            if rest_response.status_code == 200:
+                try:
+                    json_response = json.loads(rest_response.text)
+                    return(json_response)
+                except:
+                    return(None)
+        except:
+            return(None)
+
+        return(None)
+
+
+    def show_operating_systems(self):
+        # query packet API
+        oses = self.get_oses()
+
+        # initialize table for report
+        from prettytable import PrettyTable
+        tmp_table = PrettyTable()
+        tmp_table.title = "Operating Systems"
+        tmp_table.field_names = ["Name","Distro","Version","Preinstallable","Licensed"]
+        for tmp_field in tmp_table.field_names:
+            tmp_table.align[tmp_field] = "l"
+
+        for os in oses['operating_systems']:
+            tmp_table.add_row([os['name'],os['distro'],os['version'],os['preinstallable'],os['licensed']])
+
+        print(tmp_table)
+
+
+    def get_facilities(self):
+        try:
+            api_endpoint = "/facilities"
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.get("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers)
+            if rest_response.status_code == 200:
+                try:
+                    json_response = json.loads(rest_response.text)
+                    return(json_response)
+                except:
+                    return(None)
+        except:
+            return(None)
+
+        return(None)
+
+
+    def show_facilities(self):
+        # query packet API
+        facilities = self.get_facilities()
+
+        # initialize table for report
+        from prettytable import PrettyTable
+        tmp_table = PrettyTable()
+        tmp_table.title = "Data Centers"
+        tmp_table.field_names = ["Name","Code","UUID"]
+        for tmp_field in tmp_table.field_names:
+            tmp_table.align[tmp_field] = "l"
+
+        for os in facilities['facilities']:
+            tmp_table.add_row([os['name'],os['code'],os['id']])
+
+        print(tmp_table)
