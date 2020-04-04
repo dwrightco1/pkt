@@ -29,7 +29,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def _parse_args():
     ap = argparse.ArgumentParser(sys.argv[0], formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     ap.add_argument("--apply", "-a",  help="Apply configuation", required=False, nargs=1)
-    ap.add_argument("--show", "-s",  help="show resources", required=False, nargs=1, choices=['plan','os','facility'])
+    ap.add_argument("--show", "-s",  help="show resources", required=False, nargs=1, choices=['plan','os','facility','device'])
     ap.add_argument("--encrypt", "-e",  help="Encrypt a string", required=False, nargs=1)
     ap.add_argument("--decrypt", "-d",  help="Decrypt a string", required=False, nargs=1)
     ap.add_argument("--key", "-k", help="Encryption key for decrytping secure data", required=False, nargs=1)
@@ -144,6 +144,10 @@ def main():
     # validate credentials
     valid_creds = packet_cloud.validate_creds()
     if not valid_creds:
+        try:
+            os.remove(globals.CONFIG_FILE)
+        except:
+            sys.stdout.write("ERROR: failed to remove config file with invalid credentials: {}\n".format(globals.CONFIG_FILE))
         fail("failed to login into Packet.net with the supplied credentials\n")
 
     # run function (based on commandline args)
@@ -155,6 +159,8 @@ def main():
         packet_cloud.show_operating_systems()
     elif args.show and args.show[0] == "facility":
         packet_cloud.show_facilities()
+    elif args.show and args.show[0] == "device":
+        packet_cloud.show_devices()
     else:
         motd()
 

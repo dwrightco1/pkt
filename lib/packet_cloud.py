@@ -188,6 +188,7 @@ class PacketCloud:
             plan_price = plan['pricing']['hour']
             host_profile_table.add_row([plan_name,plan_class,plan_price,plan_memory,plan_cpu,plan_nic,plan_disk])
 
+        sys.stdout.write("------ {} ------\n".format(tmp_table.title))
         print(host_profile_table)
 
     def get_oses(self):
@@ -222,6 +223,7 @@ class PacketCloud:
         for os in oses['operating_systems']:
             tmp_table.add_row([os['name'],os['distro'],os['version'],os['preinstallable'],os['licensed']])
 
+        sys.stdout.write("------ {} ------\n".format(tmp_table.title))
         print(tmp_table)
 
 
@@ -257,4 +259,49 @@ class PacketCloud:
         for os in facilities['facilities']:
             tmp_table.add_row([os['name'],os['code'],os['id']])
 
+        sys.stdout.write("------ {} ------\n".format(tmp_table.title))
+        print(tmp_table)
+
+
+    def get_devices(self):
+        try:
+            api_endpoint = "/projects/{}/devices".format(self.project_id)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.get("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers)
+            if rest_response.status_code == 200:
+                try:
+                    json_response = json.loads(rest_response.text)
+                    return(json_response)
+                except:
+                    return(None)
+        except:
+            return(None)
+
+        return(None)
+
+
+    def show_devices(self):
+        # query packet API
+        devices = self.get_devices()
+
+        # initialize table for report
+        from prettytable import PrettyTable
+        tmp_table = PrettyTable()
+        tmp_table.title = "Devices"
+        tmp_table.field_names = ["Facility","Hostname","State","Operating System","Volumes","Storage","IP Addresses","Created"]
+        for tmp_field in tmp_table.field_names:
+            tmp_table.align[tmp_field] = "l"
+
+        for d in devices['devices']:
+            facility_name = "{} ({})".format(d['facility']['name'],d['facility']['code'])
+            ip_addrs = None
+            for i in d['ip_addresses']:
+                if ip_addrs:
+                    ip_addrs = "{}\n{}".format(ip_addrs,i['address'])
+                else:
+                    ip_addrs = "{}".format(i['address'])
+              
+            tmp_table.add_row([facility_name,d['hostname'],d['state'],d['operating_system']['name'],d['volumes'],d['storage'],ip_addrs,d['created_at']])
+
+        sys.stdout.write("------ {} ------\n".format(tmp_table.title))
         print(tmp_table)
