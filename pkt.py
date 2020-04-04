@@ -35,6 +35,10 @@ def _parse_args():
     ap.add_argument("--key", "-k", help="Encryption key for decrytping secure data", required=False, nargs=1)
     return ap.parse_args()
 
+def motd():
+    sys.stdout.write("Welcome to PKT!\n")
+    sys.stdout.write("\nPlease run: 'pkt -h' for usage information\n")
+
 def init_install_dir():
     if not os.path.isdir(globals.INSTALL_DIR):
         try:
@@ -116,7 +120,7 @@ def main():
     elif args.show and args.show[0] == "facility":
         packet_cloud.show_facilities()
     else:
-        sys.stdout.write("Nothing to do\n")
+        motd()
 
     # exit cleanly
     sys.exit(0)
