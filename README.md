@@ -22,9 +22,3 @@ Along with [etcdadm](https://github.com/kubernetes-sigs/etcdadm) and [nodeadm](h
 * Flannel (vxlan) CNI backend with plans to support other CNI backends
 * Backup & recovery of etcd clusters from quorum loss
 * Control plane protection from low memory/cpu situations
-
-## Notes
-* Prior to invoking CCTL, the cluster nodes must be configred for passwordless SSH (between all cluster nodes)
-```
-./tools/ssh-prep/configure-ssh -k ~/env-setup/macs/imac01/keys/id_rsa ~/env-setup/macs/imac01/keys/id_rsa.pub ~/env-setup/macs/imac01/keys/id_rsa root /root node1 node2
-```
