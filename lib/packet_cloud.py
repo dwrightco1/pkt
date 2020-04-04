@@ -14,6 +14,19 @@ class PacketCloud:
         self.project_id = project_id
 
 
+    def validate_creds(self):
+        try:
+            api_endpoint = "/projects/{}/plans".format(self.project_id)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.get("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers)
+            if rest_response.status_code == 200:
+                return(True)
+        except:
+            return(False)
+
+        return(False)
+
+
     def run_batch(self, hostname, action):
         post_payload = {
             'batches': [

@@ -9,7 +9,7 @@ INSTALL_DIR = "{}/.packet".format(HOME_DIR)
 ENCRYPTION_KEY_FILE = "{}/.keyfile".format(INSTALL_DIR)
 
 # configuration file
-CONFIG_FILE = "{}/k8s_deploy.conf".format(HOME_DIR)
+CONFIG_FILE = "{}/pkt.conf".format(HOME_DIR)
 
 # packet API
 API_BASEURL = "https://api.packet.net"
