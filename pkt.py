@@ -37,8 +37,14 @@ def _parse_args():
 
 
 def motd():
+    sys.stdout.write("██████╗ ██╗  ██╗████████╗\n")
+    sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
+    sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
+    sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
+    sys.stdout.write("██║     ██║  ██╗   ██║   \n")
+    sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n\n")
     sys.stdout.write("Welcome to PKT!\n")
-    sys.stdout.write("\nPlease run: 'pkt -h' for usage information\n")
+    sys.stdout.write("Run: 'pkt -h' for usage information\n")
 
 
 def init_install_dir():
