@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# define global vars
+pkt_basedir=~/pkt
+pkt_repo=https://github.com/dwrightco1/pkt.git
+pip_url=https://bootstrap.pypa.io/get-pip.py
+pip_path=/tmp/get_pip.py
+pkt_venv=~/.packet/venv
+venv_activate=${pkt_venv}/bin/activate
+init_flag=0
+
+# functions
+assert() {
+    if [ $# -gt 0 ]; then echo "ASSERT: $(basename $0) : ${1}"; fi
+    exit 1
+}
+
+usage() {
+    echo "Usage: $(basename $0)"
+    echo "	  [-i|--init]"
+    echo ""
+    exit 0
+}
+
+install_virtualenv() {
+    echo "Initializing Virtual Environment using Python ${python_version}"
+
+    if [[ ${python_version} == 2 ]]; then
+        pyver="";
+    else 
+        pyver="3";
+    fi
+
+    # Validate and initialize virtualenv
+    if [ "$(virtualenv --version -p python${pyver} > /dev/null 2>&1; echo $?)" -ne 0 ]; then
+        # Validating pip
+        which pip > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            echo "--> Installing Pip"
+            curl -s -o ${pip_path} ${pip_url}
+            if [ ! -r ${pip_path} ]; then assert "failed to download get-pip.py (from ${pip_url})"; fi
+            python${pyver} ${pip_path}
+            if [ $? -ne 0 ]; then
+                sudo python${pyver} ${pip_path} > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                    assert "Failed to install Python package: pip"
+                fi
+            fi
+        fi
+
+        # Attemping to Install virtualenv
+        echo "--> Installing python package: virtualenv"
+        pip${pyver} install virtualenv > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            sudo pip${pyver} install virtualenv > /dev/null 2>&1
+            if [ $? -ne 0 ]; then
+                assert "Failed to install Python package: virtualenv"
+            fi
+        fi
+    fi
+
+    echo "--> Starting virtual environment (located in ${pkt_venv})"
+    virtualenv -p python${pyver} ${pkt_venv} > /dev/null 2>&1
+    if [ ! -r ${venv_activate} ]; then assert "failed to initialize virtual environment"; fi
+
+    echo "--> Upgrading Pip"
+    # upgrade pip
+    (. ${venv_activate} && pip install pip --upgrade > /dev/null 2>&1)
+    echo
+}
+
+install_git() {
+    which git > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "--> Installing git"
+        yum install -y git > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            sudo yum install -y git > /dev/null 2>&1
+            if [ $? -ne 0 ]; then
+                assert "Failed to install Yum package: git"
+            fi
+        fi
+        echo
+    fi
+}
+
+##################################################################
+## main
+##################################################################
+# parse commandline
+for i in "$@"; do
+    case $i in
+    -h|--help)
+        usage
+        ;;
+    -i|--init)
+        init_flag=1
+        shift
+        ;;
+    *)
+        echo "$i is not a valid command line option."
+        echo ""
+        echo "For help, please use $0 -h"
+        echo ""
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+# validate python stack
+which python > /dev/null 2>&1
+if [ $? -ne 0 ]; then assert "Python stack missing"; fi
+
+# get python version
+python_version="$(python <<< 'import sys; print(sys.version_info[0])')"
+
+# perform initialization (optional based on commandline '--init')
+if [ ${init_flag} -eq 1 ]; then
+    echo "Initiaizing"
+    echo "--> removing ${pkt_basedir}"
+    rm -rf ${pkt_basedir}
+    echo "--> removing ${pkt_venv}"
+    rm -rf ${pkt_venv}
+    echo
+fi
+
+# initialize Python virtual environment
+if [ ! -r ${pkt_venv} ]; then
+    install_virtualenv
+fi
+
+# validate git
+which git > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    install_git
+fi
+
+# install pkt
+if [ ! -r ${pkt_basedir} ]; then
+    echo "Downloading PKT"
+    echo "--> Cloning into ${pkt_basedir} (sourcing from: ${pkt_repo})"
+    git clone ${pkt_repo} ${pkt_basedir} > /dev/null 2>&1
+    if [ ! -r ${pkt_basedir} ]; then assert "failed to clone repo to: ${pkt_basedir}"; fi
+
+    # install pkt
+    echo "--> Installing PKT"
+    (cd ${pkt_basedir} && . ${venv_activate} && pip install -e . > /dev/null 2>&1)
+    if [ $? -ne 0 ]; then assert "failed to install PKT (ran 'pip install -e .')"; fi
+fi
+
+# display completion message
+echo
+echo "PKT Installation Complete, to start run:"
+echo "source ${venv_activate} && pkt"
+
+exit 0

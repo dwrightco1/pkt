@@ -1,0 +1,28 @@
+{
+  "actions": [
+      {
+          "operation": "launch-instance",
+          "num_instances": 1,
+          "hostname_base": "k8m",
+          "plan": "t3.small.x86",
+          "facility": "sjc1",
+          "operating_system": "centos_7",
+          "userdata": "",
+          "customdata": "",
+          "ip_addresses": [
+              {
+                  "address_family": 4,
+                  "public": false
+              },
+              {
+                  "address_family": 4,
+                  "public": true
+              },
+              {
+                  "address_family": 6,
+                  "public":true 
+              }
+          ]
+      }
+  ]
+}
