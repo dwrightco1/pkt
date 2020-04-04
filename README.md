@@ -3,7 +3,9 @@ This script launches on-demand instances and orchestrates the installation of a 
 
 ## Public URL
 To start, run the following command from a terminal window:
-```bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)```
+```
+bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)
+```
 
 ## Kubernetes Integration
 PKT uses [CCTL](https://github.com/platform9/cctl) to deploy Kubernetes on Packet instances.
