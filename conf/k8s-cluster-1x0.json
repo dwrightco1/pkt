@@ -23,6 +23,16 @@
                   "public":true 
               }
           ]
+      },
+      {
+          "operation": "pf9-build-cluster",
+          "pmk_region": {
+            "url": "https://cs-integration-k8s01.platform9.horse",
+            "username": "soleng",
+            "password": "gAAAAABei4Z0QNIl63IqoGtmmEQmOu3ttab-pYPZkP1UVftUK5jiqDhYJG1APD--mYnbiyKmO08JErbNJBUcP7sdjNuuAqVfnA==",
+            "tenant": "service",
+            "region": "k8s01"
+          }
       }
   ]
 }

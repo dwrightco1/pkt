@@ -13,3 +13,6 @@ CONFIG_FILE = "{}/pkt.conf".format(HOME_DIR)
 
 # packet API
 API_BASEURL = "https://api.packet.net"
+
+# debug variables
+flag_skip_launch = True

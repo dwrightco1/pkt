@@ -48,6 +48,9 @@ def motd():
 
 
 def init_install_dir():
+    print("----------- A ------------")
+    print("globals.INSTALL_DIR={}".format(globals.INSTALL_DIR))
+    print("----------- B ------------")
     if not os.path.isdir(globals.INSTALL_DIR):
         try:
             os.mkdir(globals.INSTALL_DIR)

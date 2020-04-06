@@ -17,6 +17,8 @@ if os.getenv('CLI_BRANCH') and not None:
 else:
     cli_branch="master"
     
+express_cli_source = ('express-wizard @ git+file://home/tomchris/Development/express-cli#egg=express-cli')
+
 setup(
     name = 'pkt',
     version = '0.0.1',
@@ -51,6 +53,7 @@ setup(
         "ConfigParser",
         "pathlib2;python_version<'3'",
         "pathlib;python_version>'3'",
+        express_cli_source,
         "wheel",
         ],
     extras_require = {

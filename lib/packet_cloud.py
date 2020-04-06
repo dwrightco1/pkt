@@ -5,6 +5,7 @@ import json
 import globals
 import reports
 import time
+from encrypt import Encryption
 
 
 class PacketCloud:
@@ -134,17 +135,21 @@ class PacketCloud:
             target_hostname = "{}{}".format(action['hostname_base'], str(cnt).zfill(2))
 
             # validate host does not exists | TODO: update to allow for duplicate hostnames
-            target_uuid = self.get_device_uuid(target_hostname)
-            if target_uuid:
+            instance_uuid = self.get_device_uuid(target_hostname)
+            if instance_uuid and (not globals.flag_skip_launch):
                 sys.stdout.write("FATAL: existing host with identical name found in inventory\n")
                 sys.exit(0)
 
-            sys.stdout.write("--> launching {}\n".format(target_hostname))
-            instance_uuid, launch_message = self.launch_instance(target_hostname, action)
-            if not instance_uuid:
-                sys.stdout.write("ERROR: failed to launch instance ({})\n".format(launch_message))
-                return(None)
-            time.sleep(LAUNCH_INTERVAL)
+            if globals.flag_skip_launch:
+                sys.stdout.write("--> skipping (globals.flag_skip_launch = {})\n".format(globals.flag_skip_launch))
+            else:
+                sys.stdout.write("--> launching {}\n".format(target_hostname))
+                instance_uuid, launch_message = self.launch_instance(target_hostname, action)
+                if not instance_uuid:
+                    sys.stdout.write("ERROR: failed to launch instance ({})\n".format(launch_message))
+                    return(None)
+                time.sleep(LAUNCH_INTERVAL)
+
             instance_uuids.append(instance_uuid)
             cnt += 1
 
@@ -173,6 +178,12 @@ class PacketCloud:
 
             # invoke action-specific functions
             if action['operation'] == "launch-instance":
+                required_keys = ['num_instances','hostname_base','plan','facility','operating_system','userdata','customdata','ip_addresses']
+                for key_name in required_keys:
+                    if not key_name in action:
+                        sys.stdout.write("ERROR: missing required key in spec file: {}".format(key_name))
+                        return(None)
+
                 instance_uuids = self.launch_batch_instances(action)
                 if instance_uuids:
                     sys.stdout.write("\n[Waiting for All Instances to Boot]\n")
@@ -182,7 +193,35 @@ class PacketCloud:
                         self.show_devices(instance_uuids)
                     else:
                         sys.stdout.write("--> TIMEOUT exceeded\n")
+            elif action['operation'] == "pf9-build-cluster":
+                required_keys = ['pmk_region']
+                for key_name in required_keys:
+                    if not key_name in action:
+                        sys.stdout.write("ERROR: missing required key in spec file: {}".format(key_name))
+                        return(None)
 
+                # initialize encryption
+                encryption = Encryption(globals.ENCRYPTION_KEY_FILE)
+
+                # initialize/login in Platform9 PMK
+                from pf9_pmk import PMK
+                pf9 = PMK(
+                    action['pmk_region']['url'],
+                    action['pmk_region']['username'],
+                    encryption.decrypt_string(action['pmk_region']['password']),
+                    action['pmk_region']['tenant']
+                )
+
+                if not pf9.validate_login():
+                    sys.stdout.write("ERROR: failed to login to PMK region: {} (user={}/{}, tenant={})".format(du_url,du_user,du_password,du_tenant))
+                    return(None)
+                else:
+                    sys.stdout.write("INFO: logged into PMK region: {} (user={}/tenant{})".format(
+                        action['pmk_region']['url'],action['pmk_region']['username'],action['pmk_region']['tenant'])
+                    )
+
+                # build Kubernetes cluster on PMK
+                pf9.onboard_cluster()
 
     def get_plans(self):
         try:
