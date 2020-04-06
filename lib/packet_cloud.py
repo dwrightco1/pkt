@@ -207,16 +207,16 @@ class PacketCloud:
 
         # initialize table for report
         from prettytable import PrettyTable
-        host_profile_table = PrettyTable()
-        host_profile_table.title = "Plans"
-        host_profile_table.field_names = ["Name","Class","Price","Memory","CPU","NIC","Storage"]
-        host_profile_table.align["Name"] = "l"
-        host_profile_table.align["Class"] = "l"
-        host_profile_table.align["Price"] = "l"
-        host_profile_table.align["Memory"] = "l"
-        host_profile_table.align["CPU"] = "l"
-        host_profile_table.align["NIC"] = "l"
-        host_profile_table.align["Storage"] = "l"
+        tmp_table = PrettyTable()
+        tmp_table.title = "Plans"
+        tmp_table.field_names = ["Name","Class","Price","Memory","CPU","NIC","Storage"]
+        tmp_table.align["Name"] = "l"
+        tmp_table.align["Class"] = "l"
+        tmp_table.align["Price"] = "l"
+        tmp_table.align["Memory"] = "l"
+        tmp_table.align["CPU"] = "l"
+        tmp_table.align["NIC"] = "l"
+        tmp_table.align["Storage"] = "l"
 
         for plan in plans['plans']:
             plan_memory = "-"
@@ -250,10 +250,10 @@ class PacketCloud:
             plan_name = plan['name']
             plan_class = plan['class']
             plan_price = plan['pricing']['hour']
-            host_profile_table.add_row([plan_name,plan_class,plan_price,plan_memory,plan_cpu,plan_nic,plan_disk])
+            tmp_table.add_row([plan_name,plan_class,plan_price,plan_memory,plan_cpu,plan_nic,plan_disk])
 
         sys.stdout.write("------ {} ------\n".format(tmp_table.title))
-        print(host_profile_table)
+        print(tmp_table)
 
     def get_oses(self):
         try:
