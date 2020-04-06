@@ -2,7 +2,7 @@ import sys
 import globals
 import requests
 import json
-import express_utils
+import express_cli
 
 class PMK:
     def __init__(self, du_url, du_user, du_password, du_tenant):
@@ -51,9 +51,11 @@ class PMK:
         return(json_response['token']['project']['id'], resp.headers['X-Subject-Token'])
 
 
-    def onboard_cluster(self):
+    def onboard_cluster(self, url, username, password, tenant, region):
         if not express_cli.validate_installation():
             sys.stdout.write("ERROR: missing pip package: express-cli\n")
+        if not express_cli.build_config(url, username, password, tenant, region):
+            sys.stdout.write("ERROR: failed to build express-cli config file\n")
 
         sys.stdout.write("\n[Onboard Kubernetes Cluster]\n")
 

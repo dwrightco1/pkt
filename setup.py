@@ -53,7 +53,6 @@ setup(
         "ConfigParser",
         "pathlib2;python_version<'3'",
         "pathlib;python_version>'3'",
-        express_cli_source,
         "wheel",
         ],
     extras_require = {

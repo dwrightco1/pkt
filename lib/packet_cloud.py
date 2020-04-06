@@ -204,6 +204,7 @@ class PacketCloud:
                 encryption = Encryption(globals.ENCRYPTION_KEY_FILE)
 
                 # initialize/login in Platform9 PMK
+                sys.stdout.write("\n[Initializing PMK Integration]\n")
                 from pf9_pmk import PMK
                 pf9 = PMK(
                     action['pmk_region']['url'],
@@ -213,15 +214,21 @@ class PacketCloud:
                 )
 
                 if not pf9.validate_login():
-                    sys.stdout.write("ERROR: failed to login to PMK region: {} (user={}/{}, tenant={})".format(du_url,du_user,du_password,du_tenant))
+                    sys.stdout.write("ERROR: failed to login to PMK region: {} (user={}/{}, tenant={})\n".format(du_url,du_user,du_password,du_tenant))
                     return(None)
                 else:
-                    sys.stdout.write("INFO: logged into PMK region: {} (user={}/tenant{})".format(
+                    sys.stdout.write("--> logged into PMK region: {} (user={}/tenant{})\n".format(
                         action['pmk_region']['url'],action['pmk_region']['username'],action['pmk_region']['tenant'])
                     )
 
                 # build Kubernetes cluster on PMK
-                pf9.onboard_cluster()
+                pf9.onboard_cluster(
+                    action['pmk_region']['url'],
+                    action['pmk_region']['username'],
+                    encryption.decrypt_string(action['pmk_region']['password']),
+                    action['pmk_region']['tenant'],
+                    action['pmk_region']['region']
+                )
 
     def get_plans(self):
         try:
