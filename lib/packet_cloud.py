@@ -27,7 +27,49 @@ class PacketCloud:
         return(False)
 
 
-    def run_batch(self, hostname, action):
+    def wait_for_instances(self, instance_uuids):
+        booted_instances = []
+        start_time = int(time.time())
+        TIMEOUT = 5
+        POLL_INTERVAL = 15
+        timeout = int(time.time()) + (60 * TIMEOUT)
+        flag_all_active = False
+        while True:
+            # loop over all instances and get status
+            for tmp_uuid in instance_uuids:
+                instance_status = self.get_instance_status(tmp_uuid)
+                if instance_status == "active":
+                    if not tmp_uuid in booted_instances:
+                        booted_instances.append(tmp_uuid)
+                time.sleep(1)
+
+            # check if all instances have become active
+            tmp_flag = True
+            for tmp_uuid in instance_uuids:
+                if not tmp_uuid in booted_instances:
+                    tmp_flag = False
+                    break
+
+            if tmp_flag:
+                flag_all_active = True
+                break
+            elif int(time.time()) > timeout:
+                break
+            else:
+                time.sleep(POLL_INTERVAL)
+
+        # enforce TIMEOUT
+        if not flag_all_active:
+            return(False,0)
+
+        # calculate time to launch all instances
+        end_time = int(time.time())
+        time_elapsed = end_time - start_time
+
+        return(True,time_elapsed)
+        
+
+    def launch_instance(self, hostname, action):
         post_payload = {
             'batches': [
                 {
@@ -47,7 +89,7 @@ class PacketCloud:
         try:
             api_endpoint = "projects/{}/devices/batch".format(self.project_id)
             headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
-            rest_response = requests.post( "{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers, data=json.dumps(post_payload))
+            rest_response = requests.post("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers, data=json.dumps(post_payload))
             if rest_response.status_code != 201:
                 return(None, rest_response.text)
         except Exception as ex:
@@ -57,13 +99,15 @@ class PacketCloud:
         # parse rest response
         try:
             json_response = json.loads(rest_response.text)
-            return(json_response['batches'][0]['id'], None)
+            time.sleep(10)
+            instance_uuid = self.get_device_uuid(hostname)
+            return(instance_uuid, None)
         except:
             sys.stdout.write("INFO: failed to launch instance (failed to retrieve the batch id)\n")
             return(None, "failed to retrieve the batch id")
 
 
-    def launch_instance(self, action):
+    def launch_batch_instances(self, action):
         sys.stdout.write("ACTION = {}\n\n".format(action['operation']))
 
         # valid action JSON
@@ -83,17 +127,29 @@ class PacketCloud:
         
         # launch instances
         sys.stdout.write("\n[Launching Instances]\n")
+        instance_uuids = []
         LAUNCH_INTERVAL = 5
         cnt = 1
         while cnt <= action['num_instances']:
             target_hostname = "{}{}".format(action['hostname_base'], str(cnt).zfill(2))
+
+            # validate host does not exists (TODO: update to allow for duplicate hostnames)
+            target_uuid = self.get_device_uuid(target_hostname)
+            #if target_uuid:
+            #    sys.stdout.write("FATAL: existing host with identical name found in inventory\n")
+            #    sys.exit(0)
+
             sys.stdout.write("--> launching {}\n".format(target_hostname))
-            batch_id, launch_message = self.run_batch(target_hostname, action)
-            if not batch_id:
-                sys.stdout.write("ERROR: failed to launch instance ({})\n".format(launch_message))
-                return(None)
-            time.sleep(LAUNCH_INTERVAL)
+            instance_uuids.append(target_uuid)
+            #instance_uuid, launch_message = self.launch_instance(target_hostname, action)
+            #if not instance_uuid:
+            #    sys.stdout.write("ERROR: failed to launch instance ({})\n".format(launch_message))
+            #    return(None)
+            #time.sleep(LAUNCH_INTERVAL)
+            #instance_uuids.append(instance_uuid)
             cnt += 1
+
+        return(instance_uuids)
 
 
     def run_action(self, spec_file):
@@ -118,7 +174,16 @@ class PacketCloud:
 
             # invoke action-specific functions
             if action['operation'] == "launch-instance":
-                self.launch_instance(action)
+                instance_uuids = self.launch_batch_instances(action)
+                print("instance_uuids = {}".format(instance_uuids))
+                if instance_uuids:
+                    sys.stdout.write("\n[Waiting for All Instances to Boot]\n")
+                    all_instances_booted, boot_time = self.wait_for_instances(instance_uuids)
+                    if all_instances_booted:
+                        sys.stdout.write("--> all instances booted successfully, boot time = {} seconds\n".format(boot_time))
+                    else:
+                        sys.stdout.write("--> TIMEOUT exceeded\n")
+
 
     def get_plans(self):
         try:
@@ -293,7 +358,8 @@ class PacketCloud:
             tmp_table.align[tmp_field] = "l"
 
         for d in devices['devices']:
-            facility_name = "{} ({})".format(d['facility']['name'],d['facility']['code'])
+            facility_name = "{} (uuid={})".format(d['facility']['name'],d['facility']['code'])
+            creation_info = "{}\n{}".format(d['created_at'],d['id'])
             ip_addrs = None
             for i in d['ip_addresses']:
                 if ip_addrs:
@@ -301,7 +367,35 @@ class PacketCloud:
                 else:
                     ip_addrs = "{}".format(i['address'])
               
-            tmp_table.add_row([facility_name,d['hostname'],d['state'],d['operating_system']['name'],d['volumes'],d['storage'],ip_addrs,d['created_at']])
+            tmp_table.add_row([facility_name,d['hostname'],d['state'],d['operating_system']['name'],d['volumes'],d['storage'],ip_addrs,creation_info])
 
         sys.stdout.write("------ {} ------\n".format(tmp_table.title))
         print(tmp_table)
+
+
+    def get_device_uuid(self, hostname):
+        # query packet API
+        devices = self.get_devices()
+        for d in devices['devices']:
+            if d['hostname'] == hostname:
+                return(d['id'])
+
+        return(None)
+
+
+    def get_instance_status(self, instance_uuid):
+        instance_state = "inactive"
+        try:
+            api_endpoint = "/devices/{}".format(instance_uuid)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.get("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers)
+            if rest_response.status_code == 200:
+                try:
+                    json_response = json.loads(rest_response.text)
+                    return(json_response['state'])
+                except:
+                    return(instance_state)
+        except Exception as ex:
+            return(instance_state)
+
+        return(instance_state)
