@@ -133,20 +133,19 @@ class PacketCloud:
         while cnt <= action['num_instances']:
             target_hostname = "{}{}".format(action['hostname_base'], str(cnt).zfill(2))
 
-            # validate host does not exists (TODO: update to allow for duplicate hostnames)
+            # validate host does not exists | TODO: update to allow for duplicate hostnames
             target_uuid = self.get_device_uuid(target_hostname)
-            #if target_uuid:
-            #    sys.stdout.write("FATAL: existing host with identical name found in inventory\n")
-            #    sys.exit(0)
+            if target_uuid:
+                sys.stdout.write("FATAL: existing host with identical name found in inventory\n")
+                sys.exit(0)
 
             sys.stdout.write("--> launching {}\n".format(target_hostname))
-            instance_uuids.append(target_uuid)
-            #instance_uuid, launch_message = self.launch_instance(target_hostname, action)
-            #if not instance_uuid:
-            #    sys.stdout.write("ERROR: failed to launch instance ({})\n".format(launch_message))
-            #    return(None)
-            #time.sleep(LAUNCH_INTERVAL)
-            #instance_uuids.append(instance_uuid)
+            instance_uuid, launch_message = self.launch_instance(target_hostname, action)
+            if not instance_uuid:
+                sys.stdout.write("ERROR: failed to launch instance ({})\n".format(launch_message))
+                return(None)
+            time.sleep(LAUNCH_INTERVAL)
+            instance_uuids.append(instance_uuid)
             cnt += 1
 
         return(instance_uuids)
@@ -175,12 +174,12 @@ class PacketCloud:
             # invoke action-specific functions
             if action['operation'] == "launch-instance":
                 instance_uuids = self.launch_batch_instances(action)
-                print("instance_uuids = {}".format(instance_uuids))
                 if instance_uuids:
                     sys.stdout.write("\n[Waiting for All Instances to Boot]\n")
                     all_instances_booted, boot_time = self.wait_for_instances(instance_uuids)
                     if all_instances_booted:
-                        sys.stdout.write("--> all instances booted successfully, boot time = {} seconds\n".format(boot_time))
+                        sys.stdout.write("--> all instances booted successfully, boot time = {} seconds\n\n".format(boot_time))
+                        self.show_devices(instance_uuids)
                     else:
                         sys.stdout.write("--> TIMEOUT exceeded\n")
 
@@ -345,7 +344,7 @@ class PacketCloud:
         return(None)
 
 
-    def show_devices(self):
+    def show_devices(self, filter_uuid_list=None):
         # query packet API
         devices = self.get_devices()
 
@@ -358,6 +357,9 @@ class PacketCloud:
             tmp_table.align[tmp_field] = "l"
 
         for d in devices['devices']:
+            if filter_uuid_list and (not d['id'] in filter_uuid_list):
+                continue
+
             facility_name = "{} (uuid={})".format(d['facility']['name'],d['facility']['code'])
             creation_info = "{}\n{}".format(d['created_at'],d['id'])
             ip_addrs = None
