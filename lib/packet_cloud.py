@@ -31,7 +31,7 @@ class PacketCloud:
     def wait_for_instances(self, instance_uuids):
         booted_instances = []
         start_time = int(time.time())
-        TIMEOUT = 5
+        TIMEOUT = 10
         POLL_INTERVAL = 15
         timeout = int(time.time()) + (60 * TIMEOUT)
         flag_all_active = False
@@ -94,7 +94,7 @@ class PacketCloud:
             if rest_response.status_code != 201:
                 return(None, rest_response.text)
         except Exception as ex:
-            sys.stdout.write("ERROR: failed to launch instance ({})\n".format(ex.message))
+            sys.stdout.write("ERROR: failed to launch instance (exception.message={})\n".format(ex.message))
             return(None, ex.message)
 
         # parse rest response
@@ -102,27 +102,25 @@ class PacketCloud:
             json_response = json.loads(rest_response.text)
             time.sleep(10)
             instance_uuid = self.get_device_uuid(hostname)
-            return(instance_uuid, None)
-        except:
+            return(instance_uuid, "instance launched successfully")
+        except Exception as ex1:
             sys.stdout.write("INFO: failed to launch instance (failed to retrieve the batch id)\n")
-            return(None, "failed to retrieve the batch id")
+            return(None, "failed to retrieve the server id (exception.message={})".format(ex1.message))
 
 
     def launch_batch_instances(self, action):
-        sys.stdout.write("ACTION = {}\n\n".format(action['operation']))
-
         # valid action JSON
-        required_keys = ['num_instances','plan']
+        required_keys = ['num_instances','plan','facility','operating_system','hostname_base']
         for key_name in required_keys:
             if not key_name in action:
-                sys.stdout.write("ERROR: missing required key in action: {}".format(key_name))
+                sys.stdout.write("ERROR: missing required key in action: {}\n".format(key_name))
                 return(None)
 
         # prepare to launch instances
-        table_title = "------ Action Parameters ------"
-        table_columns = ["Plan","Data Center","Operating System","Hostname Base","# Instances"]
+        table_title = "-------------- Action Parameters --------------"
+        table_columns = ["Operation Type","Plan","Data Center","Operating System","Hostname Base","# Instances"]
         table_rows = [ 
-            [action['plan'], action['facility'], action['operating_system'], action['hostname_base'], action['num_instances']]
+            [action['operation'],action['plan'], action['facility'], action['operating_system'], action['hostname_base'], action['num_instances']]
         ]
         reports.display_table(table_title, table_columns, table_rows)
         
@@ -193,6 +191,11 @@ class PacketCloud:
                         self.show_devices(instance_uuids)
                     else:
                         sys.stdout.write("--> TIMEOUT exceeded\n")
+
+                    # early exit (if global flag is set)
+                    if globals.flag_stop_after_launch:
+                        sys.stdout.write("\nEarly Exit (globals.flag_stop_after_launch = {})\n".format(globals.flag_stop_after_launch))
+                        sys.exit(0)
             elif action['operation'] == "pf9-build-cluster":
                 required_keys = ['pmk_region','cluster','ssh_username','ssh_key']
                 for key_name in required_keys:
@@ -222,15 +225,6 @@ class PacketCloud:
                         action['pmk_region']['url'],action['pmk_region']['username'],action['pmk_region']['tenant'])
                     )
 
-                # build node_list
-                node_list = [
-                    {
-                      'ip': '139.178.89.141',
-                      'public_ip': '',
-                      'node_type': 'master'
-                    }
-                ]
-
                 # build Kubernetes cluster on PMK
                 pf9.onboard_cluster(
                     action['pmk_region']['url'],
@@ -239,7 +233,7 @@ class PacketCloud:
                     action['pmk_region']['tenant'],
                     action['pmk_region']['region'],
                     action['cluster'],
-                    node_list,
+                    action['nodes'],
                     action['ssh_username'],
                     action['ssh_key']
                 )
