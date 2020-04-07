@@ -32,6 +32,19 @@
             "password": "gAAAAABei4Z0QNIl63IqoGtmmEQmOu3ttab-pYPZkP1UVftUK5jiqDhYJG1APD--mYnbiyKmO08JErbNJBUcP7sdjNuuAqVfnA==",
             "tenant": "service",
             "region": "k8s01"
+          },
+          "ssh_username" : "root",
+          "ssh_key" : "~/.ssh/id_rsa",
+          "cluster": {
+            "name": "pkt-cluster01",
+            "master_vip_ipv4": "147.75.49.1",
+            "master_vip_iface": "bond0",
+            "metallb_cidr": "147.75.49.2-147.75.49.2",
+            "containers_cidr": "192.168.0.0/16",
+            "services_cidr": "192.169.0.0/16",
+            "privileged": 1,
+            "app_catalog_enabled": 0,
+            "allow_workloads_on_master": 0
           }
       }
   ]

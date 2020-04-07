@@ -194,7 +194,7 @@ class PacketCloud:
                     else:
                         sys.stdout.write("--> TIMEOUT exceeded\n")
             elif action['operation'] == "pf9-build-cluster":
-                required_keys = ['pmk_region']
+                required_keys = ['pmk_region','cluster','ssh_username','ssh_key']
                 for key_name in required_keys:
                     if not key_name in action:
                         sys.stdout.write("ERROR: missing required key in spec file: {}".format(key_name))
@@ -213,6 +213,7 @@ class PacketCloud:
                     action['pmk_region']['tenant']
                 )
 
+                # validate login to Platform9
                 if not pf9.validate_login():
                     sys.stdout.write("ERROR: failed to login to PMK region: {} (user={}/{}, tenant={})\n".format(du_url,du_user,du_password,du_tenant))
                     return(None)
@@ -221,13 +222,26 @@ class PacketCloud:
                         action['pmk_region']['url'],action['pmk_region']['username'],action['pmk_region']['tenant'])
                     )
 
+                # build node_list
+                node_list = [
+                    {
+                      'ip': '139.178.89.141',
+                      'public_ip': '',
+                      'node_type': 'master'
+                    }
+                ]
+
                 # build Kubernetes cluster on PMK
                 pf9.onboard_cluster(
                     action['pmk_region']['url'],
                     action['pmk_region']['username'],
                     encryption.decrypt_string(action['pmk_region']['password']),
                     action['pmk_region']['tenant'],
-                    action['pmk_region']['region']
+                    action['pmk_region']['region'],
+                    action['cluster'],
+                    node_list,
+                    action['ssh_username'],
+                    action['ssh_key']
                 )
 
     def get_plans(self):
