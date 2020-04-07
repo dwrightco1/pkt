@@ -10,7 +10,12 @@ bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)
 ## Kubernetes Integration
 PKT uses [Express-CLI](https://github.com/platform9/express-cli) to deploy Kubernetes on bare-metal [Packet.Net](https://app.packet.net) instances using [Platform9 PMK](https://platform9.com/signup)
 
-## 
+## Kubernetes Cluster Description
+A cluster is deployed by running `pkt --apply <spec-file>`
+
+The `<spec-file>` is used to describe the details of the Packet bare-metal instances (to be used as Kubernetes cluster nodes), the credentials for the Platform9 SaaS control plane, as well as the details of the Kubernetes cluster.
+
+Here is an example `<spec-file>`:
 ```
 {
   "actions": [
