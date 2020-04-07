@@ -218,7 +218,7 @@ class PacketCloud:
                     sys.stdout.write("ERROR: failed to login to PMK region: {} (user={}/{}, tenant={})\n".format(du_url,du_user,du_password,du_tenant))
                     return(None)
                 else:
-                    sys.stdout.write("--> logged into PMK region: {} (user={}/tenant{})\n".format(
+                    sys.stdout.write("--> logged into PMK region: {} (user={}/tenant={})\n".format(
                         action['pmk_region']['url'],action['pmk_region']['username'],action['pmk_region']['tenant'])
                     )
 
