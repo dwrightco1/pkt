@@ -1,5 +1,5 @@
 # PKT | CLI for deploying Kubernetes clusters on Packet.net
-This script launches bare-metal instances on [Packet.Net](https://app.packet.net) and orchestrates the installation of a Kubernetes cluster.
+PKT launches bare-metal instances on [Packet.Net](https://app.packet.net) and orchestrates the installation of a Kubernetes cluster.
 
 ## Public URL
 To start, run the following command from a terminal window:
