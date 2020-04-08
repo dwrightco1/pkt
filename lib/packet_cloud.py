@@ -522,3 +522,16 @@ class PacketCloud:
             return(instance_state)
 
         return(instance_state)
+
+
+    def delete_instance(self, uuid):
+        try:
+            api_endpoint = "/devices/{}".format(uuid)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.delete("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers)
+            if rest_response.status_code == 204:
+                return(True)
+        except:
+            return(False)
+
+        return(False)

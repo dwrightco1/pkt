@@ -28,10 +28,11 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # functions
 def _parse_args():
     ap = argparse.ArgumentParser(sys.argv[0], formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    ap.add_argument("--apply", "-a",  help="Apply configuation", required=False, nargs=1)
-    ap.add_argument("--show", "-s",  help="show resources", required=False, nargs=1, choices=['plan','os','facility','device'])
+    ap.add_argument("--apply", "-a",  help="Apply <path-to-specfile>", required=False, nargs=1)
+    ap.add_argument("--show", "-s",  help="show <resource>", required=False, nargs=1, choices=['plan','os','facility','device'])
+    ap.add_argument("--delete", "-d",  help="delete <uuid>", required=False, nargs=1)
     ap.add_argument("--encrypt", "-e",  help="Encrypt a string", required=False, nargs=1)
-    ap.add_argument("--decrypt", "-d",  help="Decrypt a string", required=False, nargs=1)
+    ap.add_argument("--unencrypt", "-u",  help="Decrypt a string", required=False, nargs=1)
     ap.add_argument("--key", "-k", help="Encryption key for decrytping secure data", required=False, nargs=1)
     return ap.parse_args()
 
@@ -125,7 +126,7 @@ def main():
     if args.encrypt:
         sys.stdout.write("Encrypted string: {}\n".format(encryption.encrypt_string(args.encrypt[0])))
         sys.exit(0)
-    elif args.decrypt:
+    elif args.unencrypt:
         sys.stdout.write("Decrypted string: {}\n".format(encryption.decrypt_string(args.decrypt[0])))
         sys.exit(0)
 
@@ -159,6 +160,9 @@ def main():
     # run function (based on commandline args)
     if args.apply:
         packet_cloud.run_action(args.apply[0])
+    elif args.delete:
+        if not packet_cloud.delete_instance(args.delete[0]):
+            fail("failed to delete instance")
     elif args.show and args.show[0] == "plan":
         packet_cloud.show_plans()
     elif args.show and args.show[0] == "os":
