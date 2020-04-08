@@ -59,6 +59,5 @@ class PMK:
 
         sys.stdout.write("\n[Onboard Kubernetes Cluster]\n")
         if not express_cli.build_cluster(cluster, nodes, ssh_username, ssh_key):
-            sys.stdout.write("ERROR: failed to build cluster\n")
             sys.exit(1)
 

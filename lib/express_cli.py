@@ -128,19 +128,22 @@ def build_cluster(cluster, nodes, username, ssh_key):
             command_args.append("-m")
         else:
             command_args.append("-w")
-        command_args.append(node['ip'])
+        command_args.append(node['private_ip'])
 
         if node['public_ip'] != "":
             command_args.append("-f")
             command_args.append(node['public_ip'])
 
     # append cluster args
-    command_args.append('--masterVip')
-    command_args.append(cluster['master_vip_ipv4'])
-    command_args.append('--masterVipIf')
-    command_args.append(cluster['master_vip_iface'])
-    command_args.append('--metallbIpRange')
-    command_args.append(cluster['metallb_cidr'])
+    if cluster['master_vip_ipv4'] != "":
+        command_args.append('--masterVip')
+        command_args.append(cluster['master_vip_ipv4'])
+    if cluster['master_vip_iface'] != "":
+        command_args.append('--masterVipIf')
+        command_args.append(cluster['master_vip_iface'])
+    if cluster['metallb_cidr'] != "":
+        command_args.append('--metallbIpRange')
+        command_args.append(cluster['metallb_cidr'])
     command_args.append('--containersCidr')
     command_args.append(cluster['containers_cidr'])
     command_args.append('--servicesCidr')

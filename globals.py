@@ -19,5 +19,5 @@ EXPRESS_BASE_DIR = "{}/pf9".format(HOME_DIR)
 EXPRESS_CONFIG_DIR = "{}/config".format(EXPRESS_BASE_DIR)
 
 # debug variables
-flag_skip_launch = True
+flag_skip_launch = False
 flag_stop_after_launch = False

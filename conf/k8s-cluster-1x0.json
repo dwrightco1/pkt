@@ -27,25 +27,23 @@
       {
           "operation": "pf9-build-cluster",
           "pmk_region": {
-            "url": "https://cs-integration-k8s01.platform9.horse",
-            "username": "soleng",
+            "url": "https://pmkft-1581453652-84909.platform9.io/",
+            "username": "dwrightco1@gmail.com",
             "password": "gAAAAABei4Z0QNIl63IqoGtmmEQmOu3ttab-pYPZkP1UVftUK5jiqDhYJG1APD--mYnbiyKmO08JErbNJBUcP7sdjNuuAqVfnA==",
             "tenant": "service",
-            "region": "k8s01"
+            "region": "RegionOne"
           },
           "ssh_username" : "root",
           "ssh_key" : "~/.ssh/id_rsa",
-          "nodes": [
-              {
-                "ip": "147.75.71.67",
-                "public_ip": "147.75.71.67",
-                "node_type": "master"
-              }
+          "masters": [
+              "k8m01"
+          ],
+          "workers": [
           ],
           "cluster": {
-            "name": "pkt-cluster01",
+            "name": "pkt-cluster03",
             "master_vip_ipv4": "",
-            "master_vip_iface": "bond0",
+            "master_vip_iface": "",
             "metallb_cidr": "",
             "containers_cidr": "192.168.0.0/16",
             "services_cidr": "192.169.0.0/16",
