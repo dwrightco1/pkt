@@ -27,7 +27,7 @@ def init(url, username, password, tenant, region):
 
 
 def build_config(url, username, password, tenant, region):
-    sys.stdout.write("--> Building configuration file for Express-CLI\n")
+    sys.stdout.write("--> Building configuration file\n")
     
     # validate express base directory exists
     if not os.path.isdir(globals.EXPRESS_BASE_DIR):
@@ -128,7 +128,7 @@ def build_cluster(cluster, nodes, username, ssh_key):
             command_args.append("-m")
         else:
             command_args.append("-w")
-        command_args.append(node['private_ip'])
+        command_args.append(node['node_ip'])
 
         if node['public_ip'] != "":
             command_args.append("-f")

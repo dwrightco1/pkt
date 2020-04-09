@@ -199,10 +199,13 @@ class PacketCloud:
                         sys.stdout.write("\nEarly Exit (globals.flag_stop_after_launch = {})\n".format(globals.flag_stop_after_launch))
                         sys.exit(0)
             elif action['operation'] == "pf9-build-cluster":
-                required_keys = ['pmk_region','cluster','ssh_username','ssh_key','masters','workers']
+                required_keys = ['pmk_region','cluster','ssh_username','ssh_key','masters','workers','k8s_network_tag']
                 for key_name in required_keys:
                     if not key_name in action:
                         sys.stdout.write("ERROR: missing required key in spec file: {}".format(key_name))
+                        return(None)
+                    if action[key_name] == "":
+                        sys.stdout.write("ERROR: required key cannot be null: {}".format(key_name))
                         return(None)
 
                 # initialize encryption
@@ -220,7 +223,9 @@ class PacketCloud:
 
                 # validate login to Platform9
                 if not pf9.validate_login():
-                    sys.stdout.write("ERROR: failed to login to PMK region: {} (user={}/{}, tenant={})\n".format(du_url,du_user,du_password,du_tenant))
+                    sys.stdout.write("ERROR: failed to login to PMK region: {} (user={}/tenant={})\n".format(
+                        action['pmk_region']['url'],action['pmk_region']['username'],action['pmk_region']['tenant'])
+                    )
                     return(None)
                 else:
                     sys.stdout.write("--> logged into PMK region: {} (user={}/tenant={})\n".format(
@@ -229,11 +234,11 @@ class PacketCloud:
 
                 # build node list
                 node_list = []
-                for node_hostname in action['masters']:
+                for node in action['masters']:
                     node_entry = {
-                        "hostname": node_hostname,
-                        "private_ip": self.get_private_ip(node_hostname),
-                        "public_ip": self.get_public_ip(node_hostname),
+                        "hostname": node['hostname'],
+                        "node_ip": node['node_ip'],
+                        "public_ip": self.get_public_ip(node['hostname']),
                         "node_type": "master"
                     }
                     node_list.append(node_entry)
@@ -253,14 +258,14 @@ class PacketCloud:
                 reports.display_table(table_title, table_columns, table_rows)
 
                 table_title = "\n-------------- Kubernetes Cluster Nodes --------------"
-                table_columns = ["Hostname","Node Type","Public IP","Private IP"]
+                table_columns = ["Hostname","Node Type","Node IP","Public IP"]
                 table_rows = []
                 for node in node_list:
                     node_entry = [
                         node['hostname'], 
                         node['node_type'], 
-                        node['public_ip'], 
-                        node['private_ip']
+                        node['node_ip'],
+                        node['public_ip'] 
                     ]
                     table_rows.append(node_entry)
                 reports.display_table(table_title, table_columns, table_rows)
@@ -480,16 +485,17 @@ class PacketCloud:
         return(None)
 
 
-    def get_public_ip(self, hostname):
+    def get_public_ip(self, hostname, network_tag=None):
         # query packet API
         devices = self.get_devices()
         for d in devices['devices']:
             if d['hostname'] != hostname:
                 continue
             for i in d['ip_addresses']:
+                #print("i = {}\n--------------------".format(i))
                 if i['address_family'] == 4 and i['public']:
                     return(i['address'])
-
+                    
         return(None)
 
 

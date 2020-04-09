@@ -161,7 +161,7 @@ def main():
     # manage debug parameters
     if args.debug and args.debug[0] == "skip_launch":
         globals.flag_skip_launch = True
-    elif args.debug and args.debug[0] == "stop_after_launch":
+    if args.debug and args.debug[0] == "stop_after_launch":
         globals.flag_stop_after_launch = True
 
     # run function (based on commandline args)
@@ -170,6 +170,7 @@ def main():
     elif args.delete:
         if not packet_cloud.delete_instance(args.delete[0]):
             fail("failed to delete instance")
+        sys.stdout.write("instance deleted\n")
     elif args.show and args.show[0] == "plan":
         packet_cloud.show_plans()
     elif args.show and args.show[0] == "os":

@@ -4,7 +4,7 @@
           "operation": "launch-instance",
           "num_instances": 1,
           "hostname_base": "k8m",
-          "plan": "c1.small.x86",
+          "plan": "c2.medium.x86",
           "facility": "sjc1",
           "operating_system": "ubuntu_16_04",
           "userdata": "",
@@ -17,34 +17,34 @@
               {
                   "address_family": 4,
                   "public": true
-              },
-              {
-                  "address_family": 6,
-                  "public":true 
               }
           ]
       },
       {
-          "operation": "pf9-build-cluster",
+          "operation": "disable.pf9-build-cluster",
           "pmk_region": {
             "url": "https://pmkft-1581453652-84909.platform9.io/",
             "username": "dwrightco1@gmail.com",
-            "password": "gAAAAABei4Z0QNIl63IqoGtmmEQmOu3ttab-pYPZkP1UVftUK5jiqDhYJG1APD--mYnbiyKmO08JErbNJBUcP7sdjNuuAqVfnA==",
+            "password": "gAAAAABejzdapjnNZ17g1Uo1_baSjJWlio5uHbj5HeTPol-SQ22mQe3gcJhiMwzNft2_wGlEjjfBRBo6X1faU1YjsGCuNn9vpQ==",
             "tenant": "service",
             "region": "RegionOne"
           },
           "ssh_username" : "root",
           "ssh_key" : "~/.ssh/id_rsa",
           "masters": [
-              "k8m01"
+              {
+                  "hostname": "k8m01",
+                  "node_ip": "192.167.100.1"
+              }
           ],
           "workers": [
           ],
+          "k8s_network_tag": "k8s-backend01",
           "cluster": {
             "name": "pkt-cluster05",
-            "master_vip_ipv4": "10.88.91.2",
-            "master_vip_iface": "bond0:0",
-            "metallb_cidr": "10.88.91.3-10.88.91.10",
+            "master_vip_ipv4": "192.167.100.100",
+            "master_vip_iface": "enp1s0f1",
+            "metallb_cidr": "192.167.100.101-192.167.100.200",
             "containers_cidr": "192.168.0.0/16",
             "services_cidr": "192.169.0.0/16",
             "privileged": 1,

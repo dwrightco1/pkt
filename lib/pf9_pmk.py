@@ -57,7 +57,6 @@ class PMK:
             sys.stdout.write("ERROR: failed to initialize express-cli\n")
             sys.exit(1)
 
-        sys.stdout.write("\n[Onboard Kubernetes Cluster]\n")
         if not express_cli.build_cluster(cluster, nodes, ssh_username, ssh_key):
             sys.exit(1)
 
