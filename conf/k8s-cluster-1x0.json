@@ -4,9 +4,9 @@
           "operation": "launch-instance",
           "num_instances": 1,
           "hostname_base": "k8m",
-          "plan": "t3.small.x86",
+          "plan": "c1.small.x86",
           "facility": "sjc1",
-          "operating_system": "centos_7",
+          "operating_system": "ubuntu_16_04",
           "userdata": "",
           "customdata": "",
           "ip_addresses": [
@@ -41,10 +41,10 @@
           "workers": [
           ],
           "cluster": {
-            "name": "pkt-cluster03",
-            "master_vip_ipv4": "",
-            "master_vip_iface": "",
-            "metallb_cidr": "",
+            "name": "pkt-cluster05",
+            "master_vip_ipv4": "10.88.91.2",
+            "master_vip_iface": "bond0:0",
+            "metallb_cidr": "10.88.91.3-10.88.91.10",
             "containers_cidr": "192.168.0.0/16",
             "services_cidr": "192.169.0.0/16",
             "privileged": 1,

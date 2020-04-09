@@ -28,12 +28,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # functions
 def _parse_args():
     ap = argparse.ArgumentParser(sys.argv[0], formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    ap.add_argument("--apply", "-a",  help="Apply <path-to-specfile>", required=False, nargs=1)
-    ap.add_argument("--show", "-s",  help="show <resource>", required=False, nargs=1, choices=['plan','os','facility','device'])
+    ap.add_argument("--apply", "-a",  help="apply <path-to-specfile>", required=False, nargs=1)
+    ap.add_argument("--show", "-s",  help="show <resource>", required=False, nargs=1, choices=['plan','os','facility','server'])
     ap.add_argument("--delete", "-d",  help="delete <uuid>", required=False, nargs=1)
-    ap.add_argument("--encrypt", "-e",  help="Encrypt a string", required=False, nargs=1)
-    ap.add_argument("--unencrypt", "-u",  help="Decrypt a string", required=False, nargs=1)
-    ap.add_argument("--key", "-k", help="Encryption key for decrytping secure data", required=False, nargs=1)
+    ap.add_argument("--encrypt", "-e",  help="encrypt a string", required=False, nargs=1)
+    ap.add_argument("--unencrypt", "-u",  help="decrypt a string", required=False, nargs=1)
+    ap.add_argument("--key", "-k", help="Recryption key for decrytping secure data", required=False, nargs=1)
+    ap.add_argument("--debug", "-g",  help="set debug <parameter> to True", required=False, nargs=1, choices=['skip_launch','stop_after_launch'])
     return ap.parse_args()
 
 
@@ -157,6 +158,12 @@ def main():
             sys.stdout.write("ERROR: failed to remove config file with invalid credentials: {}\n".format(globals.CONFIG_FILE))
         fail("failed to login into Packet.net with the supplied credentials\n")
 
+    # manage debug parameters
+    if args.debug and args.debug[0] == "skip_launch":
+        globals.flag_skip_launch = True
+    elif args.debug and args.debug[0] == "stop_after_launch":
+        globals.flag_stop_after_launch = True
+
     # run function (based on commandline args)
     if args.apply:
         packet_cloud.run_action(args.apply[0])
@@ -169,7 +176,7 @@ def main():
         packet_cloud.show_operating_systems()
     elif args.show and args.show[0] == "facility":
         packet_cloud.show_facilities()
-    elif args.show and args.show[0] == "device":
+    elif args.show and args.show[0] == "server":
         packet_cloud.show_devices()
     else:
         motd()

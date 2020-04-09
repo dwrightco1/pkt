@@ -232,7 +232,7 @@ class PacketCloud:
                 for node_hostname in action['masters']:
                     node_entry = {
                         "hostname": node_hostname,
-                        "private_ip": self.get_public_ip(node_hostname),
+                        "private_ip": self.get_private_ip(node_hostname),
                         "public_ip": self.get_public_ip(node_hostname),
                         "node_type": "master"
                     }
@@ -415,8 +415,8 @@ class PacketCloud:
         for tmp_field in tmp_table.field_names:
             tmp_table.align[tmp_field] = "l"
 
-        for os in facilities['facilities']:
-            tmp_table.add_row([os['name'],os['code'],os['id']])
+        for facility in facilities['facilities']:
+            tmp_table.add_row([facility['name'],facility['code'],facility['id']])
 
         sys.stdout.write("------ {} ------\n".format(tmp_table.title))
         print(tmp_table)
@@ -447,7 +447,7 @@ class PacketCloud:
         from prettytable import PrettyTable
         tmp_table = PrettyTable()
         tmp_table.title = "Bare-Metal Instances"
-        tmp_table.field_names = ["Facility","Hostname","State","Operating System","Volumes","Storage","IP Addresses","Created"]
+        tmp_table.field_names = ["Facility","Hostname","State","Operating System","Volumes","Storage","IP Addresses","Created/UUID"]
         for tmp_field in tmp_table.field_names:
             tmp_table.align[tmp_field] = "l"
 
