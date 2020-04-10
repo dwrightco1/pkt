@@ -30,6 +30,7 @@ def _parse_args():
     ap = argparse.ArgumentParser(sys.argv[0], formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     ap.add_argument("--apply", "-a",  help="apply <path-to-specfile>", required=False, nargs=1)
     ap.add_argument("--show", "-s",  help="show <resource>", required=False, nargs=1, choices=['plan','os','facility','server'])
+    ap.add_argument("--dump", "-p",  help="dump <uuid>", required=False, nargs=1)
     ap.add_argument("--delete", "-d",  help="delete <uuid>", required=False, nargs=1)
     ap.add_argument("--encrypt", "-e",  help="encrypt a string", required=False, nargs=1)
     ap.add_argument("--unencrypt", "-u",  help="decrypt a string", required=False, nargs=1)
@@ -171,6 +172,8 @@ def main():
         if not packet_cloud.delete_instance(args.delete[0]):
             fail("failed to delete instance")
         sys.stdout.write("instance deleted\n")
+    elif args.dump:
+        packet_cloud.dump_device_record(args.dump[0])
     elif args.show and args.show[0] == "plan":
         packet_cloud.show_plans()
     elif args.show and args.show[0] == "os":

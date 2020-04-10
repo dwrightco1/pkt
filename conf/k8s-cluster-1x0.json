@@ -9,6 +9,7 @@
           "operating_system": "ubuntu_16_04",
           "userdata": "",
           "customdata": "",
+          "network_mode": "hybrid",
           "ip_addresses": [
               {
                   "address_family": 4,

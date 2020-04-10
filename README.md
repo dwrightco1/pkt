@@ -23,11 +23,12 @@ Here is an example `<spec-file>`:
           "operation": "launch-instance",
           "num_instances": 1,
           "hostname_base": "<hostname-base> (note: will be appended with '01', '02', etc.)",
-          "plan": "<packet-planName>",
-          "facility": "<packet-facilityName>",
-          "operating_system": "packet-osName",
+          "plan": "<planName>",
+          "facility": "<facilityName>",
+          "operating_system": "<osName>",
           "userdata": "",
           "customdata": "",
+          "network_mode": "<layer3|hybrid>",
           "ip_addresses": [
               {
                   "address_family": 4,
