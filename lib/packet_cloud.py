@@ -571,20 +571,94 @@ class PacketCloud:
         return(False)
 
 
+    def get_virtual_networks(self):
+        try:
+            api_endpoint = "projects/{}/virtual-networks".format(self.project_id)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.get("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers)
+            if rest_response.status_code != 200:
+                return(None)
+        except Exception as ex:
+            sys.stdout.write("ERROR: failed (exception.message={})\n".format(ex.message))
+            return(None)
+
+        # parse rest response
+        try:
+            json_response = json.loads(rest_response.text)
+            return(json_response)
+        except Exception as ex1:
+            sys.stdout.write("ERROR: {}\n".format(ex1.message))
+            return(None)
+
+
+    def disable_port(self, server_record):
+        # parse server record for post data
+        for tmp_port in server_record['network_ports']:
+            if tmp_port['name'] == "eth1":
+                port_id = tmp_port['id']
+                port_name = tmp_port['name']
+                port_mac = tmp_port['data']['mac']
+                port_type = tmp_port['type']
+                port_bond = tmp_port['bond']
+                port_native_virtual_network = tmp_port['native_virtual_network']
+                port_hardware = tmp_port['hardware']
+                port_connented_to = tmp_port['connected_port']
+                port_href = tmp_port['href']
+
+        # configure post data
+        post_payload = {
+            "id": port_id,
+            "type": port_type,
+            "name": port_name,
+            "data": { 
+                "bonded": False,
+                "mac": port_mac
+            },
+            "bond": port_bond,
+            "native_virtual_network": port_native_virtual_network,
+            "hardware": port_hardware,
+            "virtual_networks": [],
+            "connected_port": port_connented_to,
+            "href": port_href
+        }
+
+        # perform post operation
+        sys.stdout.write("--> disabling port (id={})\n".format(port_id))
+        try:
+            api_endpoint = "ports/{}/disbond".format(port_id)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.post("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers, data=json.dumps(post_payload))
+            print("code = {}".format(rest_response.status_code))
+            print("rest_response = {}".format(rest_response.text))
+            if rest_response.status_code != 201:
+                return(None)
+        except Exception as ex:
+            sys.stdout.write("ERROR: failed to disable port (exception.message={})\n".format(ex.message))
+            return(None)
+
+        # parse rest response
+        try:
+            json_response = json.loads(rest_response.text)
+            return(json_response)
+        except Exception as ex1:
+            sys.stdout.write("INFO: failed to disable port (exception.message={})\n".format(ex1.message))
+            return(None)
+
+
     def get_transition_status(self, uuid):
         return("pending")
 
-
     def set_hybrid_mode(self, instance_uuid):
         return(None)
-
 
     def set_batch_hybrid_mode(self, instance_uuids):
         import pprint 
         for uuid in instance_uuids:
             server_record = self.get_device_record(uuid)
             if server_record:
-                sys.stdout.write("--> updating {}\n".format(server_record['hostname']))
+                virtual_networks = self.get_virtual_networks()
+                if virtual_networks:
+                    port_result = self.disable_port(server_record)
   
         return(True)
 
@@ -592,7 +666,7 @@ class PacketCloud:
     def wait_for_hybrid_transition(self, instance_uuids):
         transitioned_instances = []
         start_time = int(time.time())
-        TIMEOUT = 1
+        TIMEOUT = 0
         POLL_INTERVAL = 15
         timeout = int(time.time()) + (60 * TIMEOUT)
         flag_all_transitioned = False
