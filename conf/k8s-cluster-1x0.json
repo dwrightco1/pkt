@@ -10,6 +10,7 @@
           "userdata": "",
           "customdata": "",
           "network_mode": "hybrid",
+          "k8s_vlan_tag": "k8s-backend01",
           "ip_addresses": [
               {
                   "address_family": 4,
@@ -22,7 +23,7 @@
           ]
       },
       {
-          "operation": "disable.pf9-build-cluster",
+          "operation": "pf9-build-cluster",
           "pmk_region": {
             "url": "https://pmkft-1581453652-84909.platform9.io/",
             "username": "dwrightco1@gmail.com",
@@ -33,10 +34,7 @@
           "ssh_username" : "root",
           "ssh_key" : "~/.ssh/id_rsa",
           "masters": [
-              {
-                  "hostname": "k8m01",
-                  "node_ip": "192.167.100.1"
-              }
+              { "hostname": "k8m01", "node_ip": "192.167.100.1", "node_ip_mask": "255.255.255.0", "interface": "enp1s0f1" }
           ],
           "workers": [
           ],

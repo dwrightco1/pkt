@@ -20,6 +20,15 @@ def run_cmd(cmd):
     return cmd_exitcode, cmd_stdout
 
 
+def run_cmd_ssh(host_ip, ssh_username, ssh_key, cmd):
+    cmd = "ssh -o StrictHostKeyChecking=no -i {} {}@{} {}".format(ssh_key, ssh_username, host_ip, cmd)
+    exit_status, stdout = run_cmd(cmd)
+    if exit_status == 0:
+        return(True, stdout)
+    else:
+        return(False, None)
+
+
 def test_ip_via_ssh(ssh_key, ssh_username, host_ip):
     cmd = "ssh -o StrictHostKeyChecking=no -i {} {}@{} 'echo 201'".format(ssh_key, ssh_username, host_ip)
     exit_status, stdout = run_cmd(cmd)

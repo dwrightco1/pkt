@@ -5,6 +5,7 @@ import json
 import globals
 import reports
 import time
+import ssh_utils
 from encrypt import Encryption
 
 
@@ -112,7 +113,7 @@ class PacketCloud:
 
     def launch_batch_instances(self, action):
         # valid action JSON
-        required_keys = ['num_instances','plan','facility','operating_system','hostname_base','network_mode','ip_addresses']
+        required_keys = ['num_instances','plan','facility','operating_system','hostname_base','network_mode','ip_addresses','k8s_vlan_tag']
         for key_name in required_keys:
             if not key_name in action:
                 sys.stdout.write("ERROR: missing required key in action: {}\n".format(key_name))
@@ -171,6 +172,7 @@ class PacketCloud:
                 return(None)
 
         # loop over actions (run sequentially/synchronously)
+        instance_uuids = []
         for action in spec_actions['actions']:
             if 'operation' not in action:
                 sys.stdout.write("ERROR: invalid json syntax, missing: operation\n")
@@ -205,12 +207,16 @@ class PacketCloud:
                             else:
                                 sys.stdout.write("ERROR: timeout exceeded\n")
 
+                    if 'k8s_vlan_tag' in action and action['k8s_vlan_tag'] != "":
+                        sys.stdout.write("\n[Configuring Layer-2 Networking - All Instances]\n")
+                        self.assign_batch_vlan(instance_uuids, action['k8s_vlan_tag'])
+
                     # early exit (if global flag is set)
                     if globals.flag_stop_after_launch:
                         sys.stdout.write("\nEarly Exit (globals.flag_stop_after_launch = {})\n".format(globals.flag_stop_after_launch))
                         sys.exit(0)
             elif action['operation'] == "pf9-build-cluster":
-                required_keys = ['pmk_region','cluster','ssh_username','ssh_key','masters','workers','k8s_network_tag']
+                required_keys = ['pmk_region','cluster','ssh_username','ssh_key','masters','workers']
                 for key_name in required_keys:
                     if not key_name in action:
                         sys.stdout.write("ERROR: missing required key in spec file: {}".format(key_name))
@@ -249,6 +255,8 @@ class PacketCloud:
                     node_entry = {
                         "hostname": node['hostname'],
                         "node_ip": node['node_ip'],
+                        "node_ip_mask": node['node_ip_mask'],
+                        "node_ip_interface": node['interface'],
                         "public_ip": self.get_public_ip(node['hostname']),
                         "node_type": "master"
                     }
@@ -280,6 +288,10 @@ class PacketCloud:
                     ]
                     table_rows.append(node_entry)
                 reports.display_table(table_title, table_columns, table_rows)
+
+                # assign ip address (node_ip) to Ethernet interface
+                sys.stdout.write("\n[Setting IP Address for K8s Backend - All Instances]\n")
+                self.set_batch_ip_address(instance_uuids, node_list, action['ssh_username'], action['ssh_key'])
 
                 # build Kubernetes cluster on PMK
                 pf9.onboard_cluster(
@@ -592,6 +604,13 @@ class PacketCloud:
 
 
     def disable_port(self, server_record):
+        # validate server record
+        required_keys = ['name','id','data','type','bond','native_virtual_network','hardware','connected_port','href','network_ports']
+        for key_name in required_keys:
+            if not key_name in required_keys:
+                sys.stdout.write("ERROR: missing required key in action: {}\n".format(key_name))
+                return(None)
+
         # parse server record for post data
         for tmp_port in server_record['network_ports']:
             if tmp_port['name'] == "eth1":
@@ -628,9 +647,8 @@ class PacketCloud:
             api_endpoint = "ports/{}/disbond".format(port_id)
             headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
             rest_response = requests.post("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers, data=json.dumps(post_payload))
-            print("code = {}".format(rest_response.status_code))
-            print("rest_response = {}".format(rest_response.text))
-            if rest_response.status_code != 201:
+            if rest_response.status_code != 200:
+                sys.stdout.write("ERROR: got enexpected http response code: {}\n".format(rest_response.status_code))
                 return(None)
         except Exception as ex:
             sys.stdout.write("ERROR: failed to disable port (exception.message={})\n".format(ex.message))
@@ -645,20 +663,92 @@ class PacketCloud:
             return(None)
 
 
+    def assign_vlan(self, server_record, vlan_tag):
+        # search for vlan with description = vlan_tag)
+        vlan_record = []
+        virtual_networks = self.get_virtual_networks()
+        if virtual_networks:
+            for vlan in virtual_networks['virtual_networks']:
+                if vlan['description'] == vlan_tag:
+                    vlan_record.append(vlan)
+        if len(vlan_record) == 0:
+            return(None)
+
+        # validate server record
+        required_keys = ['name','id','data','type','bond','native_virtual_network','hardware','connected_port','href','network_ports']
+        for key_name in required_keys:
+            if not key_name in required_keys:
+                sys.stdout.write("ERROR: missing required key in action: {}\n".format(key_name))
+                return(None)
+
+        # parse server record for post data
+        for tmp_port in server_record['network_ports']:
+            if tmp_port['name'] == "eth1":
+                port_id = tmp_port['id']
+                port_name = tmp_port['name']
+
+        # configure post data
+        post_payload = {
+            "id": port_id,
+            "vnid": vlan_record[0]['id']
+        }
+
+        # perform post operation
+        sys.stdout.write("--> assigning port {} to VLAN (id={})\n".format(port_name, vlan_record[0]['vxlan']))
+        try:
+            api_endpoint = "ports/{}/assign".format(port_id)
+            headers = { 'content-type': 'application/json', 'X-Auth-Token': self.token }
+            rest_response = requests.post("{}/{}".format(globals.API_BASEURL,api_endpoint), verify=False, headers=headers, data=json.dumps(post_payload))
+            if rest_response.status_code != 200:
+                sys.stdout.write("ERROR: got enexpected http response code: {}\n".format(rest_response.status_code))
+                return(None)
+            return(rest_response.text)
+        except Exception as ex:
+            sys.stdout.write("ERROR: failed to set VLAN (exception.message={})\n".format(ex.message))
+            return(None)
+
+        return(None)
+
+
     def get_transition_status(self, uuid):
         return("pending")
 
     def set_hybrid_mode(self, instance_uuid):
         return(None)
 
-    def set_batch_hybrid_mode(self, instance_uuids):
-        import pprint 
+    def assign_batch_vlan(self, instance_uuids, vlan_tag):
         for uuid in instance_uuids:
             server_record = self.get_device_record(uuid)
             if server_record:
-                virtual_networks = self.get_virtual_networks()
-                if virtual_networks:
-                    port_result = self.disable_port(server_record)
+                vlan_result = self.assign_vlan(server_record, vlan_tag)
+                if vlan_result:
+                    return(True)
+                else:
+                    sys.stdout.write("ERROR: failed to assign VLAN to {}\n".format(server_record['hostname']))
+  
+        return(False)
+
+
+    def set_batch_ip_address(self, instance_uuids, node_list, ssh_user, ssh_key):
+        for uuid in instance_uuids:
+            server_record = self.get_device_record(uuid)
+            if server_record:
+                for node in node_list:
+                    if node['hostname'] == server_record['hostname']:
+                        sys.stdout.write("--> {}: setting IP for {} to {}/{}\n".format(server_record['hostname'],node['node_ip_interface'],node['node_ip'], node['node_ip_mask']))
+                        cmd = "ifconfig {} {} netmask {} up".format(node['node_ip_interface'], node['node_ip'],node['node_ip_mask'])
+                        ssh_utils.run_cmd_ssh(node['public_ip'], ssh_user, ssh_key, cmd)
+  
+        return(True)
+
+
+    def set_batch_hybrid_mode(self, instance_uuids):
+        for uuid in instance_uuids:
+            server_record = self.get_device_record(uuid)
+            if server_record:
+                port_result = self.disable_port(server_record)
+                if not port_result:
+                    sys.stdout.write("ERROR: {}: failed to disable port\n".format(server_record['hostname']))
   
         return(True)
 
@@ -666,7 +756,7 @@ class PacketCloud:
     def wait_for_hybrid_transition(self, instance_uuids):
         transitioned_instances = []
         start_time = int(time.time())
-        TIMEOUT = 0
+        TIMEOUT = 2
         POLL_INTERVAL = 15
         timeout = int(time.time()) + (60 * TIMEOUT)
         flag_all_transitioned = False

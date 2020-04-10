@@ -29,6 +29,7 @@ Here is an example `<spec-file>`:
           "userdata": "",
           "customdata": "",
           "network_mode": "<layer3|hybrid>",
+          "k8s_vlan_tag": "<descr-on-vlan> (note: place this text in the 'Description' field of the VLAN)",
           "ip_addresses": [
               {
                   "address_family": 4,
