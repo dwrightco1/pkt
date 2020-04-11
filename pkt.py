@@ -82,6 +82,12 @@ def write_config(config_values):
         config_fh.write("[packet.net]\n")
         config_fh.write("token = {}\n".format(config_values['api_key']))
         config_fh.write("project_id = {}\n".format(config_values['project_id']))
+        config_fh.write("\n[platform9.net]\n")
+        config_fh.write("pmk_region_url = {}\n".format(config_values['pmk_region_url']))
+        config_fh.write("pmk_username = {}\n".format(config_values['pmk_username']))
+        config_fh.write("pmk_password = {}\n".format(config_values['pmk_password']))
+        config_fh.write("pmk_tenant = {}\n".format(config_values['pmk_tenant']))
+        config_fh.write("pmk_region = {}\n".format(config_values['pmk_region']))
         config_fh.close()
     except:
         fail("failed to write config file: {}\n".format(globals.CONFIG_FILE))
@@ -129,7 +135,7 @@ def main():
         sys.stdout.write("Encrypted string: {}\n".format(encryption.encrypt_string(args.encrypt[0])))
         sys.exit(0)
     elif args.unencrypt:
-        sys.stdout.write("Decrypted string: {}\n".format(encryption.decrypt_string(args.decrypt[0])))
+        sys.stdout.write("Decrypted string: {}\n".format(encryption.decrypt_string(args.unencrypt[0])))
         sys.exit(0)
 
     # prompt user for Packet credentials (if config_file is missing)
