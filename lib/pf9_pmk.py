@@ -51,11 +51,6 @@ class PMK:
 
 
     def onboard_cluster(self, url, username, password, tenant, region, cluster, nodes, ssh_username, ssh_key):
-        # initialize express-cli
-        if not express_cli.init(url, username, password, tenant, region):
-            sys.stdout.write("ERROR: failed to initialize express-cli\n")
-            sys.exit(1)
-
         if not express_cli.build_cluster(cluster, nodes, ssh_username, ssh_key):
             sys.exit(1)
 

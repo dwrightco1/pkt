@@ -41,6 +41,10 @@ def get_config():
     if pf9_region == "q":
         return ''
 
+    pf9_express_cli_branch = user_io.read_kbd("--> Express-CLI Branch", [], 'master', True, True)
+    if pf9_express_cli_branch == "q":
+        return ''
+
     # initialize encryption
     encryption = Encryption(globals.ENCRYPTION_KEY_FILE)
 
@@ -52,6 +56,7 @@ def get_config():
     config_values['pf9_password'] = encryption.encrypt_string(pf9_password)
     config_values['pf9_tenant'] = pf9_tenant
     config_values['pf9_region'] = pf9_region
+    config_values['pf9_express_cli_branch'] = pf9_express_cli_branch
 
     sys.stdout.write("\n")
     return(config_values)

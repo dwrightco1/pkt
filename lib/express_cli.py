@@ -15,7 +15,10 @@ def validate_installation():
 
 
 def init(url, username, password, tenant, region):
-    sys.stdout.write("\n[Initialize Express-CLI]\n")
+    sys.stdout.write("[Initialize Express-CLI (branch = {})]\n".format(globals.ctx['platform9']['express_cli_branch']))
+    if not install_express_cli():
+        sys.stdout.write("ERROR: failed to install express-cli\n")
+        return(False)
     if not validate_installation():
         sys.stdout.write("ERROR: missing pip package: express-cli\n")
         return(False)
@@ -26,28 +29,116 @@ def init(url, username, password, tenant, region):
     return(True)
 
 
+def get_express_branch(git_branch, repo_basedir):
+    if not os.path.isdir(repo_basedir):
+        return(None)
+
+    cmd = "cd {} && git symbolic-ref --short -q HEAD".format(repo_basedir)
+    exit_status, stdout = ssh_utils.run_cmd(cmd)
+    if exit_status != 0:
+        return(None)
+
+    return(stdout[0].strip())
+    
+
+def checkout_branch(git_branch, install_dir):
+    cmd = "cd {} && git checkout {}".format(install_dir, git_branch)
+    sys.stdout.write("cmd={}".format(cmd))
+    exit_status, stdout = ssh_utils.run_cmd(cmd)
+
+    current_branch = get_express_branch(git_branch, install_dir)
+    if current_branch != git_branch:
+        return(False)
+
+    return(True)
+
+
+def get_express_cli_branch():
+    if not os.path.isdir(globals.EXPRESS_CLI_INSTALL_DIR):
+        return(None)
+
+    cmd = "cd {} && git symbolic-ref --short -q HEAD".format(globals.EXPRESS_CLI_INSTALL_DIR)
+    exit_status, stdout = ssh_utils.run_cmd(cmd)
+    if exit_status != 0:
+        return(None)
+
+    return(stdout[0].strip())
+    
+
+def install_express_cli():
+    if not os.path.isdir(globals.EXPRESS_CLI_INSTALL_DIR):
+        cmd = "git clone {} {}".format(globals.EXPRESS_CLI_URL, globals.EXPRESS_CLI_INSTALL_DIR)
+        sys.stdout.write("--> cloning repository ({})\n".format(cmd))
+        exit_status, stdout = ssh_utils.run_cmd(cmd)
+        if not os.path.isdir(globals.EXPRESS_CLI_INSTALL_DIR):
+            sys.stdout.write("ERROR: failed to clone Express-CLI Repository\n")
+            return(False)
+
+    sys.stdout.write("--> refreshing repository (git fetch -a)\n")
+    cmd = "cd {}; git fetch -a".format(globals.EXPRESS_CLI_INSTALL_DIR)
+    exit_status, stdout = ssh_utils.run_cmd(cmd)
+    if exit_status != 0:
+        sys.stdout.write("ERROR: failed to fetch branches (git fetch -)\n")
+        return(False)
+
+    current_branch = get_express_cli_branch()
+    sys.stdout.write("--> current branch: {}\n".format(current_branch))
+    sys.stdout.write("--> target branch: {}\n".format(globals.ctx['platform9']['express_cli_branch']))
+    if current_branch != globals.ctx['platform9']['express_cli_branch']:
+        sys.stdout.write("--> switching branches: {}\n".format(globals.ctx['platform9']['express_cli_branch']))
+        if (checkout_branch(globals.ctx['platform9']['express_cli_branch'],globals.EXPRESS_CLI_INSTALL_DIR)) == False:
+            sys.stdout.write("ERROR: failed to checkout git branch: {}\n".format(globals.EXPRESS_CLI_BRANCH))
+            return(False)
+
+    cmd = "cd {}; git pull origin {}".format(globals.EXPRESS_CLI_INSTALL_DIR,globals.ctx['platform9']['express_cli_branch'])
+    sys.stdout.write("--> pulling latest code (git pull origin {})\n".format(globals.ctx['platform9']['express_cli_branch']))
+    exit_status, stdout = ssh_utils.run_cmd(cmd)
+    if exit_status != 0:
+        sys.stdout.write("ERROR: failed to pull latest code (git pull origin {})\n".format(globals.ctx['platform9']['express_cli_branch']))
+        return(False)
+ 
+    sys.stdout.write("--> pip installing express-cli\n")
+    cmd = "cd {}; pip install -e .".format(globals.EXPRESS_CLI_INSTALL_DIR)
+    exit_status, stdout = ssh_utils.run_cmd(cmd)
+    if exit_status != 0:
+        for line in stdout:
+            sys.stdout.write("{}\n".format(line))
+        sys.stdout.write("ERROR: initialization failed\n")
+        return(False)
+    return(True)
+
+
 def build_config(url, username, password, tenant, region):
-    sys.stdout.write("--> Building configuration file\n")
+    sys.stdout.write("--> building configuration file\n")
     
     # validate express base directory exists
     if not os.path.isdir(globals.EXPRESS_BASE_DIR):
         try:
-            os.path.mkdir(globals.EXPRESS_BASE_DIR)
+            os.mkdir(globals.EXPRESS_BASE_DIR)
         except:
             sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_BASE_DIR))
             sys.exit(1)
 
-    # validate express config directory exists
-    if not os.path.isdir(globals.EXPRESS_CONFIG_DIR):
+    # validate express log directory exists
+    if not os.path.isdir(globals.EXPRESS_LOG_DIR):
         try:
-            os.path.mkdir(globals.EXPRESS_CONFIG_DIR)
+            os.mkdir(globals.EXPRESS_LOG_DIR)
         except:
-            sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_CONFIG_DIR))
+            sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_LOG_DIR))
             sys.exit(1)
 
+    # validate express config directory exists
+    #if not os.path.isdir(globals.EXPRESS_CONFIG_DIR):
+    #    try:
+    #        os.mkdir(globals.EXPRESS_CONFIG_DIR)
+    #    except:
+    #        sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_CONFIG_DIR))
+    #        sys.exit(1)
+
     cmd = "express config create --du_url {} --os_username {} --os_password '{}' --os_region {} --os_tenant {}".format(
-        url, username, password, region, tenant
+        url.replace('https://',''), username, password, region, tenant
     )
+    print("cmd = {}".format(cmd))
     exit_status, stdout = ssh_utils.run_cmd(cmd)
     if exit_status != 0:
         for l in stdout:

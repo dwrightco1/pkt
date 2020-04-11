@@ -3,6 +3,7 @@
 # define global vars
 pkt_basedir=~/pkt
 pkt_repo=https://github.com/dwrightco1/pkt.git
+pkt_config=~/pkt.conf
 pip_url=https://bootstrap.pypa.io/get-pip.py
 pip_path=/tmp/get_pip.py
 pkt_venv=~/.packet/venv
@@ -122,6 +123,8 @@ if [ ${init_flag} -eq 1 ]; then
     rm -rf ${pkt_basedir}
     echo "--> removing ${pkt_venv}"
     rm -rf ${pkt_venv}
+    echo "--> removing ${pkt_config}"
+    rm -rf ${pkt_config}
     echo
 fi
 

@@ -18,7 +18,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, 'lib')))
 
 # import modules
-import globals, urllib3, requests, json, signal, argparse, packet_cloud, interview
+import globals, urllib3, requests, json, signal, argparse, packet_cloud, interview, express_cli
 from encrypt import Encryption
 from packet_cloud import PacketCloud
 
@@ -88,6 +88,7 @@ def write_config(config_values):
         config_fh.write("password = {}\n".format(config_values['pf9_password']))
         config_fh.write("tenant = {}\n".format(config_values['pf9_tenant']))
         config_fh.write("region = {}\n".format(config_values['pf9_region']))
+        config_fh.write("express_cli_branch = {}\n".format(config_values['pf9_express_cli_branch']))
         config_fh.close()
     except:
         fail("failed to write config file: {}\n".format(globals.CONFIG_FILE))
@@ -155,15 +156,14 @@ def main():
     globals.ctx['platform9']['password'] = encryption.decrypt_string(app_config.get('platform9.net','password'))
     globals.ctx['platform9']['tenant'] = app_config.get('platform9.net','tenant')
     globals.ctx['platform9']['region'] = app_config.get('platform9.net','region')
+    globals.ctx['platform9']['express_cli_branch'] = app_config.get('platform9.net','express_cli_branch')
 
-    # get parameter values from config
-    project_id = app_config.get('packet.net','project_id')
-    token = encryption.decrypt_string(app_config.get('packet.net','token'))
-    if not token:
+    # validate encryption
+    if not globals.ctx['packet']['token']:
         fail("failed to decrypt API key")
 
     # init packet cloud
-    packet_cloud = PacketCloud(token, project_id)
+    packet_cloud = PacketCloud(globals.ctx['packet']['token'], globals.ctx['packet']['project_id'])
 
     # validate credentials
     valid_creds = packet_cloud.validate_creds()
@@ -173,6 +173,11 @@ def main():
         except:
             sys.stdout.write("ERROR: failed to remove config file with invalid credentials: {}\n".format(globals.CONFIG_FILE))
         fail("failed to login into Packet.net with the supplied credentials\n")
+
+    # initialize express-cli (required for Platform9 integration)
+    if not express_cli.init(globals.ctx['platform9']['region_url'], globals.ctx['platform9']['username'], globals.ctx['platform9']['password'], globals.ctx['platform9']['tenant'], globals.ctx['platform9']['region']):
+        sys.exit(1)
+
 
     # manage debug parameters
     if args.debug and args.debug[0] == "skip_launch":
