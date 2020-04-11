@@ -196,18 +196,19 @@ class PacketCloud:
                     else:
                         sys.stdout.write("--> TIMEOUT exceeded\n")
                         sys.exit(0)
-
+ 
                     # manage network_type
-                    if 'network_mode' in action and action['network_mode'] == "hybrid":
-                        sys.stdout.write("\n[Setting {} Network Mode - All Instances]\n".format(action['network_mode']))
-                        if not self.set_batch_hybrid_mode(instance_uuids):
-                            sys.stdout.write("ERROR: failed to set one or more nodes to hybrid mode\n")
-                            sys.exit(0)
+                    if not globals.flag_skip_launch:
+                        if 'network_mode' in action and action['network_mode'] == "hybrid":
+                            sys.stdout.write("\n[Setting {} Network Mode - All Instances]\n".format(action['network_mode']))
+                            if not self.set_batch_hybrid_mode(instance_uuids):
+                                sys.stdout.write("ERROR: failed to set one or more nodes to hybrid mode\n")
+                                sys.exit(0)
 
-                    # vlan assignment
-                    if 'k8s_vlan_tag' in action and action['k8s_vlan_tag'] != "":
-                        sys.stdout.write("\n[Configuring Layer-2 Networking - All Instances]\n")
-                        self.assign_batch_vlan(instance_uuids, action['k8s_vlan_tag'])
+                        # vlan assignment
+                        if 'k8s_vlan_tag' in action and action['k8s_vlan_tag'] != "":
+                            sys.stdout.write("\n[Configuring Layer-2 Networking - All Instances]\n")
+                            self.assign_batch_vlan(instance_uuids, action['k8s_vlan_tag'])
 
                     # early exit (if global flag is set)
                     if globals.flag_stop_after_launch:
@@ -260,6 +261,17 @@ class PacketCloud:
                     }
                     node_list.append(node_entry)
 
+                for node in action['workers']:
+                    node_entry = {
+                        "hostname": node['hostname'],
+                        "node_ip": node['node_ip'],
+                        "node_ip_mask": node['node_ip_mask'],
+                        "node_ip_interface": node['interface'],
+                        "public_ip": self.get_public_ip(node['hostname']),
+                        "node_type": "worker"
+                    }
+                    node_list.append(node_entry)
+
                 table_title = "\n-------------- Kubernetes Cluster Configuration --------------"
                 table_columns = ["Name","Master VIP","VIP Interface","Services CIDR","Containers CIDR","MetalLB Range"]
                 table_rows = [
@@ -291,6 +303,7 @@ class PacketCloud:
                 sys.stdout.write("\n[Setting IP Address for K8s Backend - All Instances]\n")
                 self.set_batch_ip_address(instance_uuids, node_list, action['ssh_username'], action['ssh_key'])
 
+                sys.exit(0)
                 # build Kubernetes cluster on PMK
                 pf9.onboard_cluster(
                     globals.ctx['platform9']['region_url'],

@@ -172,7 +172,6 @@ def wait_for_job(p):
             break
         time.sleep(1)
         cnt += 1
-    sys.stdout.write("\n")
 
 
 def tail_log(p):
@@ -187,7 +186,6 @@ def tail_log(p):
             sys.stdout.write(current_line.decode())
         if p.poll() != None:
             if current_line == last_line:
-                sys.stdout.write("-------------------------------- Process Complete -------------------------------\n")
                 break
         last_line = current_line
 
@@ -200,11 +198,6 @@ def map_true_false(s):
 
 def build_cluster(cluster, nodes, username, ssh_key):
     sys.stdout.write("\n[Invoking Express-CLI (to orchestrate cluster provisioning)]\n")
-    user_input = user_io.read_kbd("--> Do you want to tail the log", ['q','y','n'], 'y', True, True)
-    if user_input == 'q':
-        return()
-
-    # build base command args
     command_args = ['express','cluster','create','-u',username,'-s',ssh_key]
     for node in nodes:
         if node['node_type'] == "master":
@@ -243,12 +236,7 @@ def build_cluster(cluster, nodes, username, ssh_key):
     cmd = ""
     for c in command_args:
         cmd = "{} {}".format(cmd,c)
-    sys.stdout.write("Running: {}\n".format(cmd))
+    sys.stdout.write("--> running:{}\n".format(cmd))
     c = subprocess.Popen(command_args,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-
-    if user_input == 'y':
-        sys.stdout.write("----------------------------------- Start Log -----------------------------------\n")
-        tail_log(c)
-    else:
-        wait_for_job(c)
+    tail_log(c)
 

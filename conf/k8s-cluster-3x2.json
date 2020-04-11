@@ -2,7 +2,7 @@
   "actions": [
       {
           "operation": "launch-instance",
-          "num_instances": 1,
+          "num_instances": 5,
           "hostname_base": "k8s",
           "plan": "c2.medium.x86",
           "facility": "sjc1",
@@ -27,9 +27,13 @@
           "ssh_username" : "root",
           "ssh_key" : "~/.ssh/id_rsa",
           "masters": [
-              { "hostname": "k8s01", "node_ip": "172.16.0.1", "node_ip_mask": "255.255.255.0", "interface": "enp1s0f1" }
+              { "hostname": "k8s01", "node_ip": "172.16.0.1", "node_ip_mask": "255.255.255.0", "interface": "enp1s0f1" },
+              { "hostname": "k8s02", "node_ip": "172.16.0.2", "node_ip_mask": "255.255.255.0", "interface": "enp1s0f1" },
+              { "hostname": "k8s03", "node_ip": "172.16.0.3", "node_ip_mask": "255.255.255.0", "interface": "enp1s0f1" }
           ],
           "workers": [
+              { "hostname": "k8s04", "node_ip": "172.16.0.4", "node_ip_mask": "255.255.255.0", "interface": "enp1s0f1" },
+              { "hostname": "k8s05", "node_ip": "172.16.0.5", "node_ip_mask": "255.255.255.0", "interface": "enp1s0f1" }
           ],
           "k8s_network_tag": "k8s-backend01",
           "cluster": {
