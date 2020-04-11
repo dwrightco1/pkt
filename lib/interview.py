@@ -41,7 +41,7 @@ def get_config():
     if pf9_region == "q":
         return ''
 
-    pf9_express_cli_branch = user_io.read_kbd("--> Express-CLI Branch", [], 'master', True, True)
+    pf9_express_cli_branch = user_io.read_kbd("--> Express-CLI Branch", [], 'tomchris/restructure', True, True)
     if pf9_express_cli_branch == "q":
         return ''
 
