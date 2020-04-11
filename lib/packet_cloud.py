@@ -300,10 +300,10 @@ class PacketCloud:
                 reports.display_table(table_title, table_columns, table_rows)
 
                 # assign ip address (node_ip) to Ethernet interface
-                sys.stdout.write("\n[Setting IP Address for K8s Backend - All Instances]\n")
-                self.set_batch_ip_address(instance_uuids, node_list, action['ssh_username'], action['ssh_key'])
+                if not globals.flag_skip_launch:
+                    sys.stdout.write("\n[Setting IP Address for K8s Backend - All Instances]\n")
+                    self.set_batch_ip_address(instance_uuids, node_list, action['ssh_username'], action['ssh_key'])
 
-                sys.exit(0)
                 # build Kubernetes cluster on PMK
                 pf9.onboard_cluster(
                     globals.ctx['platform9']['region_url'],

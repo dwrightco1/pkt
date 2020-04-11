@@ -236,7 +236,7 @@ def build_cluster(cluster, nodes, username, ssh_key):
     cmd = ""
     for c in command_args:
         cmd = "{} {}".format(cmd,c)
-    sys.stdout.write("--> running:{}\n".format(cmd))
+    sys.stdout.write("--> running:{}\n\n".format(cmd))
     c = subprocess.Popen(command_args,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     tail_log(c)
 
