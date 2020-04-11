@@ -19,6 +19,7 @@ CONFIG_FILE = "{}/pkt.conf".format(HOME_DIR)
 
 # packet API
 API_BASEURL = "https://api.packet.net"
+INSTANCE_LAUNCH_TIMEOUT = 15
 
 # express-cli
 EXPRESS_BASE_DIR = "{}/pf9".format(HOME_DIR)

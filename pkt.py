@@ -174,11 +174,6 @@ def main():
             sys.stdout.write("ERROR: failed to remove config file with invalid credentials: {}\n".format(globals.CONFIG_FILE))
         fail("failed to login into Packet.net with the supplied credentials\n")
 
-    # initialize express-cli (required for Platform9 integration)
-    if not express_cli.init(globals.ctx['platform9']['region_url'], globals.ctx['platform9']['username'], globals.ctx['platform9']['password'], globals.ctx['platform9']['tenant'], globals.ctx['platform9']['region']):
-        sys.exit(1)
-
-
     # manage debug parameters
     if args.debug and args.debug[0] == "skip_launch":
         globals.flag_skip_launch = True

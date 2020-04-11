@@ -33,7 +33,7 @@
           ],
           "k8s_network_tag": "k8s-backend01",
           "cluster": {
-            "name": "pkt-cluster05",
+            "name": "pkt01",
             "master_vip_ipv4": "192.167.100.200",
             "master_vip_iface": "enp1s0f1",
             "metallb_cidr": "192.167.100.201-192.167.100.254",

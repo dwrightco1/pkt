@@ -2,6 +2,7 @@ import sys
 import requests
 import json
 import express_cli
+import globals
 
 class PMK:
     def __init__(self, du_url, du_user, du_password, du_tenant):
@@ -51,6 +52,10 @@ class PMK:
 
 
     def onboard_cluster(self, url, username, password, tenant, region, cluster, nodes, ssh_username, ssh_key):
+        # initialize express-cli (required for Platform9 integration)
+        if not express_cli.init(globals.ctx['platform9']['region_url'], globals.ctx['platform9']['username'], globals.ctx['platform9']['password'], globals.ctx['platform9']['tenant'], globals.ctx['platform9']['region']):
+            sys.exit(1)
+
         if not express_cli.build_cluster(cluster, nodes, ssh_username, ssh_key):
             sys.exit(1)
 

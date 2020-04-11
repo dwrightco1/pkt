@@ -32,7 +32,7 @@ class PacketCloud:
     def wait_for_instances(self, instance_uuids):
         booted_instances = []
         start_time = int(time.time())
-        TIMEOUT = 10
+        TIMEOUT = globals.INSTANCE_LAUNCH_TIMEOUT
         POLL_INTERVAL = 15
         timeout = int(time.time()) + (60 * TIMEOUT)
         flag_all_active = False
@@ -195,17 +195,19 @@ class PacketCloud:
                         self.show_devices(instance_uuids)
                     else:
                         sys.stdout.write("--> TIMEOUT exceeded\n")
+                        sys.exit(0)
 
                     # manage network_type
-                    #if action['network_mode'] == "hybrid":
-                    #    sys.stdout.write("\n[Setting {} Network Mode - All Instances]\n".format(action['network_mode']))
-                    #    if not self.set_batch_hybrid_mode(instance_uuids):
-                    #        sys.stdout.write("ERROR: failed to set one or more nodes to hybrid mode\n")
-                    #        sys.exit(0)
+                    if 'network_mode' in action and action['network_mode'] == "hybrid":
+                        sys.stdout.write("\n[Setting {} Network Mode - All Instances]\n".format(action['network_mode']))
+                        if not self.set_batch_hybrid_mode(instance_uuids):
+                            sys.stdout.write("ERROR: failed to set one or more nodes to hybrid mode\n")
+                            sys.exit(0)
 
-                    #if 'k8s_vlan_tag' in action and action['k8s_vlan_tag'] != "":
-                    #    sys.stdout.write("\n[Configuring Layer-2 Networking - All Instances]\n")
-                    #    self.assign_batch_vlan(instance_uuids, action['k8s_vlan_tag'])
+                    # vlan assignment
+                    if 'k8s_vlan_tag' in action and action['k8s_vlan_tag'] != "":
+                        sys.stdout.write("\n[Configuring Layer-2 Networking - All Instances]\n")
+                        self.assign_batch_vlan(instance_uuids, action['k8s_vlan_tag'])
 
                     # early exit (if global flag is set)
                     if globals.flag_stop_after_launch:

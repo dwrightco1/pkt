@@ -16,6 +16,23 @@ def validate_installation():
 
 def init(url, username, password, tenant, region):
     sys.stdout.write("[Initialize Express-CLI (branch = {})]\n".format(globals.ctx['platform9']['express_cli_branch']))
+
+    # validate express base directory exists
+    if not os.path.isdir(globals.EXPRESS_BASE_DIR):
+        try:
+            os.mkdir(globals.EXPRESS_BASE_DIR)
+        except:
+            sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_BASE_DIR))
+            sys.exit(1)
+
+    # validate express log directory exists
+    if not os.path.isdir(globals.EXPRESS_LOG_DIR):
+        try:
+            os.mkdir(globals.EXPRESS_LOG_DIR)
+        except:
+            sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_LOG_DIR))
+            sys.exit(1)
+
     if not install_express_cli():
         sys.stdout.write("ERROR: failed to install express-cli\n")
         return(False)
@@ -111,34 +128,9 @@ def install_express_cli():
 def build_config(url, username, password, tenant, region):
     sys.stdout.write("--> building configuration file\n")
     
-    # validate express base directory exists
-    if not os.path.isdir(globals.EXPRESS_BASE_DIR):
-        try:
-            os.mkdir(globals.EXPRESS_BASE_DIR)
-        except:
-            sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_BASE_DIR))
-            sys.exit(1)
-
-    # validate express log directory exists
-    if not os.path.isdir(globals.EXPRESS_LOG_DIR):
-        try:
-            os.mkdir(globals.EXPRESS_LOG_DIR)
-        except:
-            sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_LOG_DIR))
-            sys.exit(1)
-
-    # validate express config directory exists
-    #if not os.path.isdir(globals.EXPRESS_CONFIG_DIR):
-    #    try:
-    #        os.mkdir(globals.EXPRESS_CONFIG_DIR)
-    #    except:
-    #        sys.stdout.write("ERROR: failed to create directory: {}\n".format(globals.EXPRESS_CONFIG_DIR))
-    #        sys.exit(1)
-
     cmd = "express config create --du_url {} --os_username {} --os_password '{}' --os_region {} --os_tenant {}".format(
         url.replace('https://',''), username, password, region, tenant
     )
-    print("cmd = {}".format(cmd))
     exit_status, stdout = ssh_utils.run_cmd(cmd)
     if exit_status != 0:
         for l in stdout:
