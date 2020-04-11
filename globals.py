@@ -5,6 +5,12 @@ from os.path import expanduser
 HOME_DIR = "{}".format(expanduser("~"))
 INSTALL_DIR = "{}/.packet".format(HOME_DIR)
 
+# initialize config context
+ctx = {
+    "packet": {},
+    "platform9": {}
+}
+
 # file for storing unique encryption key
 ENCRYPTION_KEY_FILE = "{}/.keyfile".format(INSTALL_DIR)
 

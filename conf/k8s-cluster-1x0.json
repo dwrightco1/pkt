@@ -24,13 +24,6 @@
       },
       {
           "operation": "pf9-build-cluster",
-          "pmk_region": {
-            "url": "https://pmkft-1581453652-84909.platform9.io/",
-            "username": "dwrightco1@gmail.com",
-            "password": "gAAAAABejzdapjnNZ17g1Uo1_baSjJWlio5uHbj5HeTPol-SQ22mQe3gcJhiMwzNft2_wGlEjjfBRBo6X1faU1YjsGCuNn9vpQ==",
-            "tenant": "service",
-            "region": "RegionOne"
-          },
           "ssh_username" : "root",
           "ssh_key" : "~/.ssh/id_rsa",
           "masters": [
@@ -41,9 +34,9 @@
           "k8s_network_tag": "k8s-backend01",
           "cluster": {
             "name": "pkt-cluster05",
-            "master_vip_ipv4": "192.167.100.100",
+            "master_vip_ipv4": "192.167.100.200",
             "master_vip_iface": "enp1s0f1",
-            "metallb_cidr": "192.167.100.101-192.167.100.200",
+            "metallb_cidr": "192.167.100.201-192.167.100.254",
             "containers_cidr": "192.168.0.0/16",
             "services_cidr": "192.169.0.0/16",
             "privileged": 1,

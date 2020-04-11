@@ -1,5 +1,4 @@
 import sys
-import globals
 import requests
 import json
 import express_cli

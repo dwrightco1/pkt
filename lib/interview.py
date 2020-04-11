@@ -21,37 +21,37 @@ def get_config():
 
     # get Platform9 credentials
     sys.stdout.write("\nPlease enter credentials for Platform9.Com:\n")
-    pmk_region_url = user_io.read_kbd("--> PMK Region URL", [], '', True, True)
-    if pmk_region_url == "q":
+    pf9_region_url = user_io.read_kbd("--> PMK Region URL", [], '', True, True)
+    if pf9_region_url == "q":
         return ''
 
-    pmk_username = user_io.read_kbd("--> Username", [], '', True, True)
-    if pmk_username == "q":
+    pf9_username = user_io.read_kbd("--> Username", [], '', True, True)
+    if pf9_username == "q":
         return ''
 
-    pmk_password = user_io.read_kbd("--> Password", [], '', False, True)
-    if pmk_password == "q":
+    pf9_password = user_io.read_kbd("--> Password", [], '', False, True)
+    if pf9_password == "q":
         return ''
 
-    pmk_tenant = user_io.read_kbd("--> Tenant", [], 'service', True, True)
-    if pmk_tenant == "q":
+    pf9_tenant = user_io.read_kbd("--> Tenant", [], 'service', True, True)
+    if pf9_tenant == "q":
         return ''
 
-    pmk_region = user_io.read_kbd("--> Region Name", [], 'RegionOne', True, True)
-    if pmk_region == "q":
+    pf9_region = user_io.read_kbd("--> Region Name", [], 'RegionOne', True, True)
+    if pf9_region == "q":
         return ''
 
     # initialize encryption
     encryption = Encryption(globals.ENCRYPTION_KEY_FILE)
 
     # update config (encrypt api_key)
-    config_values['project_id'] = project_id
-    config_values['api_key'] = encryption.encrypt_string(api_key)
-    config_values['pmk_region_url'] = pmk_region_url
-    config_values['pmk_username'] = pmk_username
-    config_values['pmk_password'] = encryption.encrypt_string(pmk_password)
-    config_values['pmk_tenant'] = pmk_tenant
-    config_values['pmk_region'] = pmk_region
+    config_values['pkt_project_id'] = project_id
+    config_values['pkt_api_key'] = encryption.encrypt_string(api_key)
+    config_values['pf9_region_url'] = pf9_region_url
+    config_values['pf9_username'] = pf9_username
+    config_values['pf9_password'] = encryption.encrypt_string(pf9_password)
+    config_values['pf9_tenant'] = pf9_tenant
+    config_values['pf9_region'] = pf9_region
 
     sys.stdout.write("\n")
     return(config_values)

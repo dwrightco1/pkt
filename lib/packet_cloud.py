@@ -197,26 +197,22 @@ class PacketCloud:
                         sys.stdout.write("--> TIMEOUT exceeded\n")
 
                     # manage network_type
-                    if action['network_mode'] == "hybrid":
-                        sys.stdout.write("\n[Setting {} Network Mode - All Instances]\n".format(action['network_mode']))
-                        if self.set_batch_hybrid_mode(instance_uuids):
-                            sys.stdout.write("\n[Waiting for All Instances to Transition to Hybrid]\n")
-                            all_instances_transitioned, trans_time = self.wait_for_hybrid_transition(instance_uuids)
-                            if all_instances_transitioned:
-                                sys.stdout.write("--> all instances transitioned successfully ({} seconds)\n\n".format(trans_time))
-                            else:
-                                sys.stdout.write("ERROR: timeout exceeded\n")
+                    #if action['network_mode'] == "hybrid":
+                    #    sys.stdout.write("\n[Setting {} Network Mode - All Instances]\n".format(action['network_mode']))
+                    #    if not self.set_batch_hybrid_mode(instance_uuids):
+                    #        sys.stdout.write("ERROR: failed to set one or more nodes to hybrid mode\n")
+                    #        sys.exit(0)
 
-                    if 'k8s_vlan_tag' in action and action['k8s_vlan_tag'] != "":
-                        sys.stdout.write("\n[Configuring Layer-2 Networking - All Instances]\n")
-                        self.assign_batch_vlan(instance_uuids, action['k8s_vlan_tag'])
+                    #if 'k8s_vlan_tag' in action and action['k8s_vlan_tag'] != "":
+                    #    sys.stdout.write("\n[Configuring Layer-2 Networking - All Instances]\n")
+                    #    self.assign_batch_vlan(instance_uuids, action['k8s_vlan_tag'])
 
                     # early exit (if global flag is set)
                     if globals.flag_stop_after_launch:
                         sys.stdout.write("\nEarly Exit (globals.flag_stop_after_launch = {})\n".format(globals.flag_stop_after_launch))
                         sys.exit(0)
             elif action['operation'] == "pf9-build-cluster":
-                required_keys = ['pmk_region','cluster','ssh_username','ssh_key','masters','workers']
+                required_keys = ['cluster','ssh_username','ssh_key','masters','workers']
                 for key_name in required_keys:
                     if not key_name in action:
                         sys.stdout.write("ERROR: missing required key in spec file: {}".format(key_name))
@@ -232,21 +228,21 @@ class PacketCloud:
                 sys.stdout.write("\n[Initializing PMK Integration]\n")
                 from pf9_pmk import PMK
                 pf9 = PMK(
-                    action['pmk_region']['url'],
-                    action['pmk_region']['username'],
-                    encryption.decrypt_string(action['pmk_region']['password']),
-                    action['pmk_region']['tenant']
+                    globals.ctx['platform9']['region_url'],
+                    globals.ctx['platform9']['username'],
+                    globals.ctx['platform9']['password'],
+                    globals.ctx['platform9']['tenant']
                 )
 
                 # validate login to Platform9
                 if not pf9.validate_login():
                     sys.stdout.write("ERROR: failed to login to PMK region: {} (user={}/tenant={})\n".format(
-                        action['pmk_region']['url'],action['pmk_region']['username'],action['pmk_region']['tenant'])
+                        globals.ctx['platform9']['region_url'],globals.ctx['platform9']['username'],globals.ctx['platform9']['tenant'])
                     )
                     return(None)
                 else:
                     sys.stdout.write("--> logged into PMK region: {} (user={}/tenant={})\n".format(
-                        action['pmk_region']['url'],action['pmk_region']['username'],action['pmk_region']['tenant'])
+                        globals.ctx['platform9']['region_url'],globals.ctx['platform9']['username'],globals.ctx['platform9']['tenant'])
                     )
 
                 # build node list
@@ -295,11 +291,11 @@ class PacketCloud:
 
                 # build Kubernetes cluster on PMK
                 pf9.onboard_cluster(
-                    action['pmk_region']['url'],
-                    action['pmk_region']['username'],
-                    encryption.decrypt_string(action['pmk_region']['password']),
-                    action['pmk_region']['tenant'],
-                    action['pmk_region']['region'],
+                    globals.ctx['platform9']['region_url'],
+                    globals.ctx['platform9']['username'],
+                    globals.ctx['platform9']['password'],
+                    globals.ctx['platform9']['tenant'],
+                    globals.ctx['platform9']['region'],
                     action['cluster'],
                     node_list,
                     action['ssh_username'],
@@ -710,9 +706,6 @@ class PacketCloud:
         return(None)
 
 
-    def get_transition_status(self, uuid):
-        return("pending")
-
     def set_hybrid_mode(self, instance_uuid):
         return(None)
 
@@ -752,48 +745,6 @@ class PacketCloud:
   
         return(True)
 
-
-    def wait_for_hybrid_transition(self, instance_uuids):
-        transitioned_instances = []
-        start_time = int(time.time())
-        TIMEOUT = 2
-        POLL_INTERVAL = 15
-        timeout = int(time.time()) + (60 * TIMEOUT)
-        flag_all_transitioned = False
-        while True:
-            # loop over all instances and get status
-            for tmp_uuid in instance_uuids:
-                transition_status = self.get_transition_status(tmp_uuid)
-                if transition_status == "active":
-                    if not tmp_uuid in transitioned_instances:
-                        transitioned_instances.append(tmp_uuid)
-                time.sleep(1)
-
-            # check if all instances have become active
-            tmp_flag = True
-            for tmp_uuid in instance_uuids:
-                if not tmp_uuid in transitioned_instances:
-                    tmp_flag = False
-                    break
-
-            if tmp_flag:
-                flag_all_transitioned = True
-                break
-            elif int(time.time()) > timeout:
-                break
-            else:
-                time.sleep(POLL_INTERVAL)
-
-        # enforce TIMEOUT
-        if not flag_all_transitioned:
-            return(False,0)
-
-        # calculate time to launch all instances
-        end_time = int(time.time())
-        time_elapsed = end_time - start_time
-
-        return(True,time_elapsed)
-        
 
     def dump_device_record(self, uuid):
         import pprint 

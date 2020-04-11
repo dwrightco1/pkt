@@ -80,14 +80,14 @@ def write_config(config_values):
     try:
         config_fh = open(globals.CONFIG_FILE, "w")
         config_fh.write("[packet.net]\n")
-        config_fh.write("token = {}\n".format(config_values['api_key']))
-        config_fh.write("project_id = {}\n".format(config_values['project_id']))
+        config_fh.write("token = {}\n".format(config_values['pkt_api_key']))
+        config_fh.write("project_id = {}\n".format(config_values['pkt_project_id']))
         config_fh.write("\n[platform9.net]\n")
-        config_fh.write("pmk_region_url = {}\n".format(config_values['pmk_region_url']))
-        config_fh.write("pmk_username = {}\n".format(config_values['pmk_username']))
-        config_fh.write("pmk_password = {}\n".format(config_values['pmk_password']))
-        config_fh.write("pmk_tenant = {}\n".format(config_values['pmk_tenant']))
-        config_fh.write("pmk_region = {}\n".format(config_values['pmk_region']))
+        config_fh.write("region_url = {}\n".format(config_values['pf9_region_url']))
+        config_fh.write("username = {}\n".format(config_values['pf9_username']))
+        config_fh.write("password = {}\n".format(config_values['pf9_password']))
+        config_fh.write("tenant = {}\n".format(config_values['pf9_tenant']))
+        config_fh.write("region = {}\n".format(config_values['pf9_region']))
         config_fh.close()
     except:
         fail("failed to write config file: {}\n".format(globals.CONFIG_FILE))
@@ -138,7 +138,7 @@ def main():
         sys.stdout.write("Decrypted string: {}\n".format(encryption.decrypt_string(args.unencrypt[0])))
         sys.exit(0)
 
-    # prompt user for Packet credentials (if config_file is missing)
+    # prompt user for Packet & Platform9 credentials (if config_file is missing)
     if not os.path.isfile(globals.CONFIG_FILE):
         config_values = interview.get_config()
         if config_values:
@@ -146,6 +146,15 @@ def main():
 
     # read config file
     app_config = read_config()
+
+    # update ctx
+    globals.ctx['packet']['project_id'] = app_config.get('packet.net','project_id')
+    globals.ctx['packet']['token'] = encryption.decrypt_string(app_config.get('packet.net','token'))
+    globals.ctx['platform9']['region_url'] = app_config.get('platform9.net','region_url')
+    globals.ctx['platform9']['username'] = app_config.get('platform9.net','username')
+    globals.ctx['platform9']['password'] = encryption.decrypt_string(app_config.get('platform9.net','password'))
+    globals.ctx['platform9']['tenant'] = app_config.get('platform9.net','tenant')
+    globals.ctx['platform9']['region'] = app_config.get('platform9.net','region')
 
     # get parameter values from config
     project_id = app_config.get('packet.net','project_id')
