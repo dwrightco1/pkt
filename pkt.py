@@ -4,6 +4,7 @@
 import os
 import sys
 
+
 # early functions
 def fail(m=None):
     sys.stdout.write("ASSERT: {}\n".format(m))
