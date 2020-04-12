@@ -40,13 +40,13 @@ def _parse_args():
 
 
 def motd():
-    if sys.version_info[0] in [3]:
-        sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
-        sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
-        sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
-        sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
-        sys.stdout.write("██║     ██║  ██╗   ██║   \n")
-        sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n")
+    #if sys.version_info[0] in [3]:
+    #    sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
+    #    sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
+    #    sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
+    #    sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
+    #    sys.stdout.write("██║     ██║  ██╗   ██║   \n")
+    #    sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n")
         
     sys.stdout.write("\nWelcome to PKT!\n")
     sys.stdout.write("Run: 'pkt -h' for usage information\n")
