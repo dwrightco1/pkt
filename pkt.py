@@ -39,14 +39,15 @@ def _parse_args():
     ap.add_argument("--debug", "-g",  help="set debug <parameter> to True", required=False, nargs=1, choices=['skip_launch','stop_after_launch'])
     return ap.parse_args()
 
+def banner():
+    sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
+    sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
+    sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
+    sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
+    sys.stdout.write("██║     ██║  ██╗   ██║   \n")
+    sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n")
+
 def motd():
-    if sys.version_info[0] == 3:
-        sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
-        sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
-        sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
-        sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
-        sys.stdout.write("██║     ██║  ██╗   ██║   \n")
-        sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n")
     sys.stdout.write("\nWelcome to PKT!\n")
     sys.stdout.write("Run: 'pkt -h' for usage information\n")
 
