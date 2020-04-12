@@ -40,17 +40,15 @@ def _parse_args():
 
 
 def motd():
-    try:
+    if sys.version_info[0] in [3]:
         sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
         sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
         sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
         sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
         sys.stdout.write("██║     ██║  ██╗   ██║   \n")
-        sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n\n")
-    except:
-        None
+        sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n")
         
-    sys.stdout.write("Welcome to PKT!\n")
+    sys.stdout.write("\nWelcome to PKT!\n")
     sys.stdout.write("Run: 'pkt -h' for usage information\n")
 
 def init_install_dir():
