@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# define global vars
+# define global vars 
 pkt_basedir=~/pkt
 pkt_repo=https://github.com/dwrightco1/pkt.git
 pkt_config=~/pkt.conf
