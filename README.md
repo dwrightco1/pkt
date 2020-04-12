@@ -7,6 +7,11 @@ To start, run the following command from a Bash shell prompt:
 bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)
 ```
 
+To re-init the installation, add the '-i' option:
+```
+bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt) -i
+```
+
 ## Kubernetes Integration
 PKT uses [Express-CLI](https://github.com/platform9/express-cli) to deploy Kubernetes on bare-metal [Packet.Net](https://app.packet.net) instances using [Platform9 PMK](https://platform9.com/signup)
 
