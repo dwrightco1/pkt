@@ -9,6 +9,7 @@ pip_path=/tmp/get_pip.py
 pkt_venv=~/.packet/venv
 venv_activate=${pkt_venv}/bin/activate
 init_flag=0
+python3_flag=0
 
 # functions
 assert() {
@@ -109,12 +110,21 @@ for i in "$@"; do
     shift
 done
 
-# validate python stack
-which python > /dev/null 2>&1
-if [ $? -ne 0 ]; then assert "Python stack missing"; fi
+# validate python stack (try python3 first)
+which python3 > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    python3_flag=1
+else
+    which python > /dev/null 2>&1
+    if [ $? -ne 0 ]; then assert "Python stack missing"; fi
+fi
 
 # get python version
-python_version="$(python <<< 'import sys; print(sys.version_info[0])')"
+if [ ${python3_flag} -eq 1 ]; then
+    python_version="$(python3 <<< 'import sys; print(sys.version_info[0])')"
+else
+    python_version="$(python <<< 'import sys; print(sys.version_info[0])')"
+fi
 
 # perform initialization (optional based on commandline '--init')
 if [ ${init_flag} -eq 1 ]; then
