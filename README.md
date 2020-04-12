@@ -2,7 +2,7 @@
 PKT launches bare-metal instances on [Packet.Net](https://app.packet.net) and orchestrates the installation of a Kubernetes cluster.
 
 ## Public URL
-To start, run the following command from a terminal window:
+To start, run the following command from a Bash shell prompt:
 ```
 bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)
 ```
