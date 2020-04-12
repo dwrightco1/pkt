@@ -41,7 +41,7 @@ install_virtualenv() {
             echo "--> Installing Pip"
             curl -s -o ${pip_path} ${pip_url} > /dev/null 2>&1
             if [ ! -r ${pip_path} ]; then assert "failed to download get-pip.py (from ${pip_url})"; fi
-            python${pyver} ${pip_path}
+            python${pyver} ${pip_path} > /dev/null 2>&1
             if [ $? -ne 0 ]; then
                 sudo python${pyver} ${pip_path} > /dev/null 2>&1
                 if [ $? -ne 0 ]; then
