@@ -39,16 +39,14 @@ def _parse_args():
     ap.add_argument("--debug", "-g",  help="set debug <parameter> to True", required=False, nargs=1, choices=['skip_launch','stop_after_launch'])
     return ap.parse_args()
 
-
 def motd():
-    #if sys.version_info[0] in [3]:
-    #    sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
-    #    sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
-    #    sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
-    #    sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
-    #    sys.stdout.write("██║     ██║  ██╗   ██║   \n")
-    #    sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n")
-        
+    if sys.version_info[0] == 3:
+        sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
+        sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
+        sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
+        sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
+        sys.stdout.write("██║     ██║  ██╗   ██║   \n")
+        sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n")
     sys.stdout.write("\nWelcome to PKT!\n")
     sys.stdout.write("Run: 'pkt -h' for usage information\n")
 
@@ -58,7 +56,6 @@ def init_install_dir():
             os.mkdir(globals.INSTALL_DIR)
         except:
             fail("failed to create directory: {}".format(globals.INSTALL_DIR))
-
 
 def read_config():
     if not os.path.isfile(globals.CONFIG_FILE):
@@ -76,7 +73,6 @@ def read_config():
         return(app_config)
     except Exception as ex:
         fail("ConfigParser.Exception: {}\n".format(ex.message))
-
 
 def write_config(config_values):
     try:
@@ -98,7 +94,6 @@ def write_config(config_values):
     # validate config was written
     if not os.path.isfile(globals.CONFIG_FILE):
         fail("failed to write config file: {}\n".format(globals.CONFIG_FILE))
-
 
 def init_keyfile(encryption_key):
     if os.path.isfile(globals.ENCRYPTION_KEY_FILE):
