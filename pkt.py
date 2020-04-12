@@ -40,15 +40,18 @@ def _parse_args():
 
 
 def motd():
-    sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
-    sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
-    sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
-    sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
-    sys.stdout.write("██║     ██║  ██╗   ██║   \n")
-    sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n\n")
+    try:
+        sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
+        sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
+        sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
+        sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
+        sys.stdout.write("██║     ██║  ██╗   ██║   \n")
+        sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n\n")
+    except:
+        None
+        
     sys.stdout.write("Welcome to PKT!\n")
     sys.stdout.write("Run: 'pkt -h' for usage information\n")
-
 
 def init_install_dir():
     if not os.path.isdir(globals.INSTALL_DIR):
