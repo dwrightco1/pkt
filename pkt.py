@@ -4,7 +4,6 @@
 import os
 import sys
 
-
 # early functions
 def fail(m=None):
     sys.stdout.write("ASSERT: {}\n".format(m))
@@ -39,16 +38,15 @@ def _parse_args():
     ap.add_argument("--debug", "-g",  help="set debug <parameter> to True", required=False, nargs=1, choices=['skip_launch','stop_after_launch'])
     return ap.parse_args()
 
-def banner():
-    sys.stdout.write("\n██████╗ ██╗  ██╗████████╗\n")
-    sys.stdout.write("██╔══██╗██║ ██╔╝╚══██╔══╝\n")
-    sys.stdout.write("██████╔╝█████╔╝    ██║   \n")
-    sys.stdout.write("██╔═══╝ ██╔═██╗    ██║   \n")
-    sys.stdout.write("██║     ██║  ██╗   ██║   \n")
-    sys.stdout.write("╚═╝     ╚═╝  ╚═╝   ╚═╝   \n")
-
 def motd():
-    sys.stdout.write("\nWelcome to PKT!\n")
+    try:
+        target_fh = open(globals.PKT_BANNER, 'r')
+        sys.stdout.write("\n{}\n".format(target_fh.read()))
+        target_fh.close()
+    except:
+        None
+
+    sys.stdout.write("Welcome to PKT!\n")
     sys.stdout.write("Run: 'pkt -h' for usage information\n")
 
 def init_install_dir():

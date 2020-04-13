@@ -1,9 +1,11 @@
 """Global Variable Defaults"""
 from os.path import expanduser
+import os
 
 # working directory
 HOME_DIR = "{}".format(expanduser("~"))
 INSTALL_DIR = "{}/.packet".format(HOME_DIR)
+PKT_BANNER = "{}/conf/banner.txt".format(os.path.dirname(os.path.realpath(__file__)))
 
 # initialize config context
 ctx = {
