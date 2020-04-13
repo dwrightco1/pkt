@@ -33,12 +33,15 @@ get_os_platform() {
   if [ -r /etc/centos-release ]; then
     os_platform="centos"
     os_version=$(cat /etc/centos-release | cut -d ' ' -f 4)
+    if [[ ! "${os_version}" == 7.* ]]; then assert "unsupported CentOS release: ${os_version}"; fi
   elif [ -r /etc/lsb-release ]; then
     os_platform="ubuntu"
     os_version=$(cat /etc/lsb-release | grep ^DISTRIB_RELEASE | cut -d = -f2)
+    if [[ ! "${os_version}" == 16.* ]]; then assert "unsupported Ubuntu release: ${os_version}"; fi
   elif [ "$(uname)" == "Darwin" ]; then
     os_platform="macos"
     os_version=$(sw_vers | grep ^ProductVersion | awk -F : '{print $2}' | awk -F ' ' '{print $1}')
+    if [[ ! "${os_version}" == 10.* ]]; then assert "unsupported MacOS release: ${os_version}"; fi
   else
     echo "ERROR: unsupported platform (only Ubuntu and CentOS are supported)"
     exit 1
