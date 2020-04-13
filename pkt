@@ -9,6 +9,8 @@ pip_path=/tmp/get_pip.py
 pkt_venv=~/.packet/venv
 venv_activate=${pkt_venv}/bin/activate
 init_flag=0
+logging=1
+log_file=~/pkt.log
 python3_flag=0
 os_platform=""
 os_version=""
@@ -22,6 +24,7 @@ assert() {
 usage() {
     echo "Usage: $(basename $0)"
     echo "	  [-i|--init]"
+    echo "	  [-v|--verbose]"
     echo ""
     exit 0
 }
@@ -33,6 +36,12 @@ get_os_platform() {
   elif [ -r /etc/lsb-release ]; then
     os_platform="ubuntu"
     os_version=$(cat /etc/lsb-release | grep ^DISTRIB_RELEASE | cut -d = -f2)
+  elif [ "$(uname)" == "Darwin" ]; then
+    os_platform="macos"
+    os_version=$(sw_vers | grep ^ProductVersion | awk -F : '{print $2}' | awk -F ' ' '{print $1}')
+  else
+    echo "ERROR: unsupported platform (only Ubuntu and CentOS are supported)"
+    exit 1
   fi
 }
 
@@ -53,20 +62,41 @@ install_virtualenv() {
             echo "--> Installing Pip"
             case ${os_platform} in
             ubuntu)
-                apt install -y python${pyver}-pip > /dev/null 2>&1
+                if [ ${logging} -eq 1 ]; then
+                    apt install -y python${pyver}-pip > ${log_file} 2>&1
+                else
+                    apt install -y python${pyver}-pip
+                fi
                 if [ $? -ne 0 ]; then
-                    sudo apt install -y python${pyver}-pip > /dev/null 2>&1
+                    if [ ${logging} -eq 1 ]; then
+                        sudo apt install -y python${pyver}-pip > ${log_file} 2>&1
+                    else
+                        sudo apt install -y python${pyver}-pip
+                    fi
                     if [ $? -ne 0 ]; then
                         assert "Failed to install Python package: pip"
                     fi
                 fi
                 ;;
-            centos)
-                curl -s -o ${pip_path} ${pip_url} > /dev/null 2>&1
+            centos|macos)
+                if [ ${logging} -eq 1 ]; then
+                    curl -s -o ${pip_path} ${pip_url} > ${log_file} 2>&1
+                else
+                    curl -s -o ${pip_path} ${pip_url}
+                fi
                 if [ ! -r ${pip_path} ]; then assert "failed to download get-pip.py (from ${pip_url})"; fi
-                python${pyver} ${pip_path}
+
+                if [ ${logging} -eq 1 ]; then
+                    python${pyver} ${pip_path} > ${log_file} 2>&1
+                else
+                    python${pyver} ${pip_path}
+                fi
                 if [ $? -ne 0 ]; then
-                    sudo python${pyver} ${pip_path} > /dev/null 2>&1
+                    if [ ${logging} -eq 1 ]; then
+                        sudo python${pyver} ${pip_path} > ${log_file} 2>&1
+                    else
+                        sudo python${pyver} ${pip_path}
+                    fi
                     if [ $? -ne 0 ]; then
                         assert "Failed to install Python package: pip"
                     fi
@@ -82,18 +112,34 @@ install_virtualenv() {
 
         case ${os_platform} in
         ubuntu)
-            apt install -y python${pyver}-venv > /dev/null 2>&1
+            if [ ${logging} -eq 1 ]; then
+                apt install -y python${pyver}-venv > ${log_file} 2>&1
+            else
+                apt install -y python${pyver}-venv
+            fi
             if [ $? -ne 0 ]; then
-                sudo apt install -y python${pyver}-venv > /dev/null 2>&1
+                if [ ${logging} -eq 1 ]; then
+                    sudo apt install -y python${pyver}-venv > ${log_file} 2>&1
+                else
+                    sudo apt install -y python${pyver}-venv
+                fi
                 if [ $? -ne 0 ]; then
                     assert "Failed to install Python package: virtualenv"
                 fi
             fi
             ;;
-        centos)
-            pip${pyver} install virtualenv
+        centos|macos)
+            if [ ${logging} -eq 1 ]; then
+                pip${pyver} install virtualenv > ${log_file} 2>&1
+            else
+                pip${pyver} install virtualenv
+            fi
             if [ $? -ne 0 ]; then
-                sudo pip${pyver} install virtualenv > /dev/null 2>&1
+                if [ ${logging} -eq 1 ]; then
+                    sudo pip${pyver} install virtualenv > ${log_file} 2>&1
+                else
+                    sudo pip${pyver} install virtualenv
+                fi
                 if [ $? -ne 0 ]; then
                     assert "Failed to install Python package: virtualenv"
                 fi
@@ -107,11 +153,19 @@ install_virtualenv() {
     echo "--> Starting virtual environment (located in ${pkt_venv})"
     case ${os_platform} in
     ubuntu)
-        python${pyver} -m venv ${pkt_venv}
+        if [ ${logging} -eq 1 ]; then
+            python${pyver} -m venv ${pkt_venv} > ${log_file} 2>&1
+        else
+            python${pyver} -m venv ${pkt_venv}
+        fi
         if [ ! -r ${venv_activate} ]; then assert "failed to initialize virtual environment"; fi
         ;;
-    centos)
-        virtualenv -p python${pyver} ${pkt_venv} > /dev/null 2>&1
+    centos|macos)
+        if [ ${logging} -eq 1 ]; then
+            virtualenv -p python${pyver} ${pkt_venv} > ${log_file} 2>&1
+        else
+            virtualenv -p python${pyver} ${pkt_venv}
+        fi
         if [ ! -r ${venv_activate} ]; then assert "failed to initialize virtual environment"; fi
         ;;
     *)
@@ -152,6 +206,10 @@ for i in "$@"; do
         init_flag=1
         shift
         ;;
+    -v|--verbose)
+        logging=0
+        shift
+        ;;
     *)
         echo "$i is not a valid command line option."
         echo ""
@@ -166,6 +224,11 @@ done
 # get platform
 get_os_platform
 echo "Running on: ${os_platform} ${os_version}"
+
+# logging message
+if [ ${logging} -eq 1 ]; then
+    echo "Logging to: ${log_file}"
+fi
 
 # validate python stack (try python3 first)
 which python3 > /dev/null 2>&1
@@ -210,12 +273,20 @@ fi
 if [ ! -r ${pkt_basedir} ]; then
     echo "Downloading PKT"
     echo "--> Cloning into ${pkt_basedir} (sourcing from: ${pkt_repo})"
-    git clone ${pkt_repo} ${pkt_basedir} > /dev/null 2>&1
+    if [ ${logging} -eq 1 ]; then
+        git clone ${pkt_repo} ${pkt_basedir} > ${log_file} 2>&1
+    else
+        git clone ${pkt_repo} ${pkt_basedir}
+    fi
     if [ ! -r ${pkt_basedir} ]; then assert "failed to clone repo to: ${pkt_basedir}"; fi
 
     # install pkt
     echo "--> Installing PKT"
-    (cd ${pkt_basedir} && . ${venv_activate} && pip install -e . > /dev/null 2>&1)
+    if [ ${logging} -eq 1 ]; then
+        (cd ${pkt_basedir} && . ${venv_activate} && pip install -e . > ${log_file} 2>&1)
+    else
+        (cd ${pkt_basedir} && . ${venv_activate} && pip install -e .)
+    fi
     if [ $? -ne 0 ]; then assert "failed to install PKT (ran 'pip install -e .')"; fi
 fi
 
