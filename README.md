@@ -4,7 +4,7 @@ PKT launches bare-metal instances on [Packet.Net](https://app.packet.net) and or
 ## Public URL
 To start, run the following command from a Bash shell prompt:
 ```
-bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)
+/bin/bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)
 ```
 
 To re-init the installation, add the '-i' option:
