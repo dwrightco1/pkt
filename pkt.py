@@ -135,6 +135,10 @@ def main():
         sys.stdout.write("Decrypted string: {}\n".format(encryption.decrypt_string(args.unencrypt[0])))
         sys.exit(0)
 
+    # display banner (if no commandline arguments passed)
+    if not len(sys.argv) > 1:
+        motd()
+
     # prompt user for Packet & Platform9 credentials (if config_file is missing)
     if not os.path.isfile(globals.CONFIG_FILE):
         config_values = interview.get_config()
@@ -193,8 +197,6 @@ def main():
         packet_cloud.show_facilities()
     elif args.show and args.show[0] == "server":
         packet_cloud.show_devices()
-    else:
-        motd()
 
     # exit cleanly
     sys.exit(0)
