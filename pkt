@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# define global vars 
+# define global vars
 pkt_basedir=~/pkt
 pkt_repo=https://github.com/dwrightco1/pkt.git
 pkt_config=~/pkt.conf
@@ -10,6 +10,8 @@ pkt_venv=~/.packet/venv
 venv_activate=${pkt_venv}/bin/activate
 init_flag=0
 python3_flag=0
+os_platform=""
+os_version=""
 
 # functions
 assert() {
@@ -24,12 +26,22 @@ usage() {
     exit 0
 }
 
+get_os_platform() {
+  if [ -r /etc/centos-release ]; then
+    os_platform="centos"
+    os_version=$(cat /etc/centos-release | cut -d ' ' -f 4)
+  elif [ -r /etc/lsb-release ]; then
+    os_platform="ubuntu"
+    os_version=$(cat /etc/lsb-release | grep ^DISTRIB_RELEASE | cut -d = -f2)
+  fi
+}
+
 install_virtualenv() {
     echo "Initializing Virtual Environment using Python ${python_version}"
 
     if [[ ${python_version} == 2 ]]; then
         pyver="";
-    else 
+    else
         pyver="3";
     fi
 
@@ -39,31 +51,72 @@ install_virtualenv() {
         which pip > /dev/null 2>&1
         if [ $? -ne 0 ]; then
             echo "--> Installing Pip"
-            curl -s -o ${pip_path} ${pip_url} > /dev/null 2>&1
-            if [ ! -r ${pip_path} ]; then assert "failed to download get-pip.py (from ${pip_url})"; fi
-            python${pyver} ${pip_path} > /dev/null 2>&1
-            if [ $? -ne 0 ]; then
-                sudo python${pyver} ${pip_path} > /dev/null 2>&1
+            case ${os_platform} in
+            ubuntu)
+                apt install -y python${pyver}-pip > /dev/null 2>&1
                 if [ $? -ne 0 ]; then
-                    assert "Failed to install Python package: pip"
+                    sudo apt install -y python${pyver}-pip > /dev/null 2>&1
+                    if [ $? -ne 0 ]; then
+                        assert "Failed to install Python package: pip"
+                    fi
                 fi
-            fi
+                ;;
+            centos)
+                curl -s -o ${pip_path} ${pip_url} > /dev/null 2>&1
+                if [ ! -r ${pip_path} ]; then assert "failed to download get-pip.py (from ${pip_url})"; fi
+                python${pyver} ${pip_path}
+                if [ $? -ne 0 ]; then
+                    sudo python${pyver} ${pip_path} > /dev/null 2>&1
+                    if [ $? -ne 0 ]; then
+                        assert "Failed to install Python package: pip"
+                    fi
+                fi
+                ;;
+            *)
+                ;;
+            esac
         fi
 
         # Attemping to Install virtualenv
         echo "--> Installing python package: virtualenv"
-        pip${pyver} install virtualenv > /dev/null 2>&1
-        if [ $? -ne 0 ]; then
-            sudo pip${pyver} install virtualenv > /dev/null 2>&1
+
+        case ${os_platform} in
+        ubuntu)
+            apt install -y python${pyver}-venv > /dev/null 2>&1
             if [ $? -ne 0 ]; then
-                assert "Failed to install Python package: virtualenv"
+                sudo apt install -y python${pyver}-venv > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                    assert "Failed to install Python package: virtualenv"
+                fi
             fi
-        fi
+            ;;
+        centos)
+            pip${pyver} install virtualenv
+            if [ $? -ne 0 ]; then
+                sudo pip${pyver} install virtualenv > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                    assert "Failed to install Python package: virtualenv"
+                fi
+            fi
+            ;;
+        *)
+            ;;
+        esac
     fi
 
     echo "--> Starting virtual environment (located in ${pkt_venv})"
-    virtualenv -p python${pyver} ${pkt_venv} > /dev/null 2>&1
-    if [ ! -r ${venv_activate} ]; then assert "failed to initialize virtual environment"; fi
+    case ${os_platform} in
+    ubuntu)
+        python${pyver} -m venv ${pkt_venv}
+        if [ ! -r ${venv_activate} ]; then assert "failed to initialize virtual environment"; fi
+        ;;
+    centos)
+        virtualenv -p python${pyver} ${pkt_venv} > /dev/null 2>&1
+        if [ ! -r ${venv_activate} ]; then assert "failed to initialize virtual environment"; fi
+        ;;
+    *)
+        ;;
+    esac
 
     echo "--> Upgrading Pip"
     # upgrade pip
@@ -109,6 +162,10 @@ for i in "$@"; do
     esac
     shift
 done
+
+# get platform
+get_os_platform
+echo "Running on: ${os_platform} ${os_version}"
 
 # validate python stack (try python3 first)
 which python3 > /dev/null 2>&1
