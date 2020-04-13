@@ -12,6 +12,9 @@ To re-init the installation, add the '-i' option:
 bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt) -i
 ```
 
+## Support Operating Systems
+PKT is tested on CentOS-7, Ubuntu-16, and MacOS-10.  The installer will fail if an unsuppoted OS is detected.
+
 ## Kubernetes Integration
 PKT uses [Express-CLI](https://github.com/platform9/express-cli) to deploy Kubernetes on bare-metal [Packet.Net](https://app.packet.net) instances using [Platform9 PMK](https://platform9.com/signup)
 
