@@ -1,21 +1,37 @@
 # PKT | CLI for deploying Kubernetes clusters on Packet.net
-PKT launches bare-metal instances on [Packet.Net](https://app.packet.net) and optionally orchestrate the installation of a Kubernetes cluster.
+PKT launches bare-metal instances on [Packet.Net](https://app.packet.net) and optionally orchestrate the installation of a Production-Quality Kubernetes cluster.
 
-## Public URL
-To start, run the following command from a Bash shell prompt:
+## Installation (Public URL)
+PKT is written in Python and installs with PIP.  The installer (written in Bash) sets up a Python virtual environment, clones the PKT repo on Github, and uses PIP to install PKT into the virtual environment.
+
+To install PKT, run the following command from a Bash shell prompt:
 ```
 /bin/bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)
 ```
+Here's a sample installation:
+```
+$ /bin/bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt)
+Running on: ubuntu 16.04
+Logging to: /home/cmadmin/pkt.log
+Initializing Virtual Environment using Python 3
+--> Installing Pip
+--> Installing python package: virtualenv
+--> Starting virtual environment (located in /home/cmadmin/.packet/venv)
+--> Upgrading Pip
 
-To re-init the installation, add the '-i' option:
+Downloading PKT
+--> Cloning into /home/cmadmin/pkt (sourcing from: https://github.com/dwrightco1/pkt.git)
+--> Installing PKT
+
+PKT Installation Complete, to start run:
+source /home/cmadmin/.packet/venv/bin/activate && pkt
 ```
-bash <(curl -s https://raw.githubusercontent.com/dwrightco1/pkt/master/pkt) -i
-```
+NOTE: To re-init the installation, add the '-i' option:
 
 ## Supported Operating Systems
-PKT is tested on CentOS-7, Ubuntu-16, and MacOS-10.  The installer will fail if an unsuppoted OS is detected.
+PKT is tested on MacOS-10, Ubuntu-16, and CentOS-7.  The installer will fail if an unsuppoted OS is detected.
 
-NOTE: Support for CentOS-8 and Ubuntu-18 is planned.
+NOTE: Support for CentOS-8 and Ubuntu-18 is in-progress.
 
 ## Kubernetes Integration
 PKT uses [Express-CLI](https://github.com/platform9/express-cli) to deploy Kubernetes on bare-metal [Packet.Net](https://app.packet.net) instances using [Platform9 PMK](https://platform9.com/signup)
@@ -25,7 +41,7 @@ A cluster is deployed by running `pkt --apply <spec-file>`
 
 The `<spec-file>` is used to describe the details of the Packet bare-metal instances (to be used as Kubernetes cluster nodes), the credentials for the Platform9 SaaS control plane, as well as the details of the Kubernetes cluster.
 
-### To launch bare-metal instances on Packet.Net and use them as cluster nodes, use a `<spec-file>` that looks like this:
+*To launch bare-metal instances on Packet.Net and use them as cluster nodes, use a `<spec-file>` that looks like this:*
 ```
 {
   "actions": [
@@ -82,7 +98,7 @@ The `<spec-file>` is used to describe the details of the Packet bare-metal insta
 }
 ```
 
-### Using Existing Servers (as cluster nodes)
+*Using Existing Servers (as cluster nodes)*
 If you want to use existing servers (i.e. skip launching the instances on Packet, and instead use whetever servers/instances you want, use a `<spec-file>` that looks like this:
 ```
 {
