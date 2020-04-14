@@ -171,15 +171,26 @@ class PacketCloud:
                 sys.stdout.write("ERROR: missing required key in spec file: {}".format(key_name))
                 return(None)
 
+        # initialize flags
+        flag_launched = False
+        flag_assimilated = False
+
         # loop over actions (run sequentially/synchronously)
         instance_uuids = []
+        assimilated_servers = {}
         for action in spec_actions['actions']:
             if 'operation' not in action:
                 sys.stdout.write("ERROR: invalid json syntax, missing: operation\n")
                 continue
 
             # invoke action-specific functions
+            if action['operation'] == "imported-instances":
+                flag_assimilated = True
+                assimilated_servers = action['instances']
+                print("assimilated_servers = {}".format(assimilated_servers))
+                sys.stdout.write("\n[Validating Assimilated Instances]\n")
             if action['operation'] == "launch-instance":
+                flag_launched = True
                 required_keys = ['num_instances','hostname_base','plan','facility','operating_system','userdata','customdata','ip_addresses']
                 for key_name in required_keys:
                     if not key_name in action:
@@ -251,23 +262,39 @@ class PacketCloud:
                 # build node list
                 node_list = []
                 for node in action['masters']:
+                    if flag_launched:
+                        tmp_public_ip = self.get_public_ip(node['hostname'])
+                    elif flag_assimilated:
+                        tmp_public_ip = assimilated_servers[node['hostname']]
+                    else:
+                        sys.stdout.write("WARNING: invalid condition: either flag_launched or flag_assimilated must be set\n")
+                        continue
+
                     node_entry = {
                         "hostname": node['hostname'],
                         "node_ip": node['node_ip'],
                         "node_ip_mask": node['node_ip_mask'],
                         "node_ip_interface": node['interface'],
-                        "public_ip": self.get_public_ip(node['hostname']),
+                        "public_ip": tmp_public_ip,
                         "node_type": "master"
                     }
                     node_list.append(node_entry)
 
                 for node in action['workers']:
+                    if flag_launched:
+                        tmp_public_ip = self.get_public_ip(node['hostname'])
+                    elif flag_assimilated:
+                        tmp_public_ip = assimilated_servers[node['hostname']]
+                    else:
+                        sys.stdout.write("WARNING: invalid condition: either flag_launched or flag_assimilated must be set\n")
+                        continue
+
                     node_entry = {
                         "hostname": node['hostname'],
                         "node_ip": node['node_ip'],
                         "node_ip_mask": node['node_ip_mask'],
                         "node_ip_interface": node['interface'],
-                        "public_ip": self.get_public_ip(node['hostname']),
+                        "public_ip": tmp_public_ip,
                         "node_type": "worker"
                     }
                     node_list.append(node_entry)
@@ -300,7 +327,7 @@ class PacketCloud:
                 reports.display_table(table_title, table_columns, table_rows)
 
                 # assign ip address (node_ip) to Ethernet interface
-                if not globals.flag_skip_launch:
+                if not globals.flag_skip_launch and flag_launched:
                     sys.stdout.write("\n[Setting IP Address for K8s Backend - All Instances]\n")
                     self.set_batch_ip_address(instance_uuids, node_list, action['ssh_username'], action['ssh_key'])
 

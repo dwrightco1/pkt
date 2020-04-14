@@ -23,7 +23,7 @@ A cluster is deployed by running `pkt --apply <spec-file>`
 
 The `<spec-file>` is used to describe the details of the Packet bare-metal instances (to be used as Kubernetes cluster nodes), the credentials for the Platform9 SaaS control plane, as well as the details of the Kubernetes cluster.
 
-Here is an example `<spec-file>`:
+### To launch bare-metal instances on Packet.Net and use them as cluster nodes, use a `<spec-file>` that looks like this:
 ```
 {
   "actions": [
@@ -72,6 +72,43 @@ Here is an example `<spec-file>`:
             "containers_cidr": "192.168.0.0/16",
             "services_cidr": "192.169.0.0/16",
             "privileged": 0,
+            "app_catalog_enabled": 0,
+            "allow_workloads_on_master": 0
+          }
+      }
+  ]
+}
+```
+
+### Using Existing Servers (as cluster nodes)
+If you want to use existing servers (i.e. skip launching the instances on Packet, and instead use whetever servers/instances you want, use a `<spec-file>` that looks like this:
+```
+{
+  "actions": [
+      {
+          "operation": "imported-instances",
+          "instances": {
+              "k8s01": "10.238.0.15"
+          }
+      },
+      {
+          "operation": "pf9-build-cluster",
+          "ssh_username" : "cmadmin",
+          "ssh_key" : "~/env-setup/macs/imac01/keys/cm-master",
+          "masters": [
+              { "hostname": "k8s01", "node_ip": "10.0.2.15", "node_ip_mask": "255.255.255.0", "interface": "enp0s3" }
+          ],
+          "workers": [
+          ],
+          "k8s_network_tag": "k8s-backend01",
+          "cluster": {
+            "name": "pkt03",
+            "master_vip_ipv4": "10.0.2.200",
+            "master_vip_iface": "enp0s3",
+            "metallb_cidr": "10.0.2.201-10.0.2.250",
+            "containers_cidr": "192.168.0.0/16",
+            "services_cidr": "192.169.0.0/16",
+            "privileged": 1,
             "app_catalog_enabled": 0,
             "allow_workloads_on_master": 0
           }

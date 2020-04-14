@@ -15,7 +15,7 @@ def validate_installation():
 
 
 def init(url, username, password, tenant, region):
-    sys.stdout.write("[Initialize Express-CLI (branch = {})]\n".format(globals.ctx['platform9']['express_cli_branch']))
+    sys.stdout.write("\n[Initialize Express-CLI (branch = {})]\n".format(globals.ctx['platform9']['express_cli_branch']))
 
     # validate express base directory exists
     if not os.path.isdir(globals.EXPRESS_BASE_DIR):
