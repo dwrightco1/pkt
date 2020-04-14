@@ -1,5 +1,5 @@
 # PKT | CLI for deploying Kubernetes clusters on Packet.net
-PKT launches bare-metal instances on [Packet.Net](https://app.packet.net) and optionally orchestrate the installation of a Production-Quality Kubernetes cluster.
+PKT launches bare-metal instances on [Packet.Net](https://app.packet.net) and optionally orchestrate the installation of a production-quality Kubernetes cluster.
 
 ## Installation (Public URL)
 PKT is written in Python and installs with PIP.  The installer (written in Bash) sets up a Python virtual environment, clones the PKT repo on Github, and uses PIP to install PKT into the virtual environment.
