@@ -118,3 +118,96 @@ If you want to use existing servers (i.e. skip launching the instances on Packet
   ]
 }
 ```
+
+## Sample Run
+Here is the log from a 3x2 cluster build (3 masters, 2 workers):
+```
+$ pkt --apply conf/k8s-cluster-3x2.json
+-------------- Action Parameters --------------
++-----------------+---------------+-------------+------------------+---------------+-------------+
+| Operation Type  | Plan          | Data Center | Operating System | Hostname Base | # Instances |
++-----------------+---------------+-------------+------------------+---------------+-------------+
+| launch-instance | c2.medium.x86 | sjc1        | ubuntu_16_04     | k8s           | 5           |
++-----------------+---------------+-------------+------------------+---------------+-------------+
+
+[Launching Instances]
+--> skipping (globals.flag_skip_launch = True)
+--> skipping (globals.flag_skip_launch = True)
+--> skipping (globals.flag_skip_launch = True)
+--> skipping (globals.flag_skip_launch = True)
+--> skipping (globals.flag_skip_launch = True)
+
+[Waiting for All Instances to Boot]
+--> all instances booted successfully, boot time = 468 seconds
+
+------ Bare-Metal Instances ------
++---------------------------+----------+--------+------------------+---------+---------+----------------+--------------------------------------+
+| Facility                  | Hostname | State  | Operating System | Volumes | Storage | IP Addresses   | Created/UUID                         |
++---------------------------+----------+--------+------------------+---------+---------+----------------+--------------------------------------+
+| Sunnyvale, CA (uuid=sjc1) | k8s02    | active | Ubuntu 16.04 LTS | []      | {}      | 147.75.49.250  | 2020-04-14T20:24:28Z                 |
+|                           |          |        |                  |         |         | 10.88.91.3     | db006d87-7276-4916-8913-834d04b21b4c |
+| Sunnyvale, CA (uuid=sjc1) | k8s03    | active | Ubuntu 16.04 LTS | []      | {}      | 147.75.49.99   | 2020-04-14T20:24:46Z                 |
+|                           |          |        |                  |         |         | 10.88.91.5     | a1df33be-c330-4de7-844b-4ca0b7be53f5 |
+| Sunnyvale, CA (uuid=sjc1) | k8s01    | active | Ubuntu 16.04 LTS | []      | {}      | 147.75.49.194  | 2020-04-14T20:24:10Z                 |
+|                           |          |        |                  |         |         | 10.88.91.1     | 3534494f-6a0f-48cb-b9b7-ab9b738b89d9 |
+| Sunnyvale, CA (uuid=sjc1) | k8s05    | active | Ubuntu 16.04 LTS | []      | {}      | 147.75.109.127 | 2020-04-14T20:25:21Z                 |
+|                           |          |        |                  |         |         | 10.88.91.9     | 1b30fed6-9c21-4a83-9d93-496e183bae2a |
+| Sunnyvale, CA (uuid=sjc1) | k8s04    | active | Ubuntu 16.04 LTS | []      | {}      | 147.75.49.199  | 2020-04-14T20:25:04Z                 |
+|                           |          |        |                  |         |         | 10.88.91.7     | 7edfd12d-3b3e-44d3-b9f6-470ad9a4f04f |
++---------------------------+----------+--------+------------------+---------+---------+----------------+--------------------------------------+
+
+[Initializing PMK Integration]
+--> logged into PMK region: https://pmkft-1581453652-84909.platform9.io/ (user=dwrightco1@gmail.com/tenant=service)
+
+-------------- Kubernetes Cluster Configuration --------------
++-------+-----------------+---------------+----------------+-----------------+---------------------------------+
+| Name  | Master VIP      | VIP Interface | Services CIDR  | Containers CIDR | MetalLB Range                   |
++-------+-----------------+---------------+----------------+-----------------+---------------------------------+
+| pkt01 | 192.167.100.200 | enp1s0f1      | 192.169.0.0/16 | 192.168.0.0/16  | 192.167.100.201-192.167.100.254 |
++-------+-----------------+---------------+----------------+-----------------+---------------------------------+
+
+-------------- Kubernetes Cluster Nodes --------------
++----------+-----------+------------+----------------+
+| Hostname | Node Type | Node IP    | Public IP      |
++----------+-----------+------------+----------------+
+| k8s01    | master    | 172.16.0.1 | 147.75.49.194  |
+| k8s02    | master    | 172.16.0.2 | 147.75.49.250  |
+| k8s03    | master    | 172.16.0.3 | 147.75.49.99   |
+| k8s04    | worker    | 172.16.0.4 | 147.75.49.199  |
+| k8s05    | worker    | 172.16.0.5 | 147.75.109.127 |
++----------+-----------+------------+----------------+
+
+[Initialize Express-CLI (branch = tomchris/restructure)]
+--> refreshing repository (git fetch -a)
+--> current branch: tomchris/restructure
+--> target branch: tomchris/restructure
+--> pulling latest code (git pull origin tomchris/restructure)
+--> pip installing express-cli
+--> building configuration file
+
+[Invoking Express-CLI (to orchestrate cluster provisioning)]
+--> running: express cluster create -u root -s ~/.ssh/id_rsa -m 172.16.0.1 -f 147.75.49.194 -m 172.16.0.2 -f 147.75.49.250 -m 172.16.0.3 -f 147.75.49.99 -w 172.16.0.4 -f 147.75.49.199 -w 172.16.0.5 -f 147.75.109.127 --masterVip 192.167.100.200 --masterVipIf enp1s0f1 --metallbIpRange 192.167.100.201-192.167.100.254 --containersCidr 192.168.0.0/16 --servicesCidr 192.169.0.0/16 --privileged True --appCatalogEnabled False --allowWorkloadsOnMaster False pkt01
+
+Creating Cluster: pkt01
+Using nodepool id: 41caa389-a031-4c69-9aa9-3a06ff2745b5
+Waiting for cluster create to complete, status = True
+Cluster pkt01 created successfully
+Cluster UUID: a5a89dbb-6db7-4d88-9631-1e35d409c838
+Attaching to cluster pkt01
+Discovering UUIDs for the cluster's master nodes
+Master nodes:
+Discovering UUIDs for the cluster's worker nodes
+Worker Nodes:
+Waiting for cluster create to complete, status = True
+Attaching master nodes to the cluster
+Waiting for cluster to become ready
+Attaching to cluster
+Successfully attached to cluster
+Attaching worker nodes to the cluster
+Waiting for cluster to become ready
+Attaching to cluster
+Successfully attached to cluster
+Successfully created cluster pkt01 using node(s):
+    masters: ('172.16.0.1', '172.16.0.2', '172.16.0.3')
+    workers: ('172.16.0.4', '172.16.0.5')
+```
