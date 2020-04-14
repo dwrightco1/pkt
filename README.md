@@ -28,6 +28,35 @@ source /home/cmadmin/.packet/venv/bin/activate && pkt
 ```
 NOTE: To re-init the installation, add the '-i' option:
 
+## Configuring PKT
+The first time you invoke PKT (or whenever ~/pkt.conf does not exist) it will prompt you for your Packet.Net & Platform9 credentials:
+```
+ubuntu-xenial:~$ source /home/cmadmin/.packet/venv/bin/activate && pkt
+
+██████╗ ██╗  ██╗████████╗
+██╔══██╗██║ ██╔╝╚══██╔══╝
+██████╔╝█████╔╝    ██║
+██╔═══╝ ██╔═██╗    ██║
+██║     ██║  ██╗   ██║
+╚═╝     ╚═╝  ╚═╝   ╚═╝
+
+Welcome to PKT!
+Run: 'pkt -h' for usage information
+
+Please enter credentials for Packet.Net:
+--> Project ID []: <your-project-id>
+--> API Key: <your-api-key>
+
+Please enter credentials for Platform9.Com:
+--> PMK Region URL []: <your-region-url>
+--> Username []: <your-username>
+--> Password: <your-password>
+--> Tenant [service]:
+--> Region Name [RegionOne]:
+--> Express-CLI Branch [master]:
+```
+Once configuration is complete, you can immediately start querying Packet, lauching instances, and building Kubernetes clusters.
+
 ## Supported Operating Systems
 PKT is tested on MacOS-10, Ubuntu-16, and CentOS-7.  The installer will fail if an unsuppoted OS is detected.
 
